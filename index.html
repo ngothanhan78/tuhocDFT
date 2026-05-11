@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFT — Module Tự Học Lý Thuyết Hàm Mật Độ</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(','\\)']], displayMath: [['$$','$$']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --blue: #58a6ff;
+  --gold: #d4a017;
+  --gold-light: #e8c347;
+  --green: #3fb950;
+  --red: #f85149;
+  --purple: #bc8cff;
+  --sidebar-w: 272px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  display: flex; min-height: 100vh; line-height: 1.7;
+}
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; bottom: 0;
+  overflow-y: auto; z-index: 100;
+  display: flex; flex-direction: column;
+}
+#sidebar-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(88,166,255,0.06) 0%, rgba(188,140,255,0.06) 100%);
+}
+#sidebar-header .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+#sidebar-header .logo-icon {
+  width: 32px; height: 32px; background: var(--gold);
+  border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: 16px;
+}
+#sidebar-header h1 {
+  font-family: 'Merriweather', serif; font-size: 14px;
+  font-weight: 700; color: var(--gold-light); line-height: 1.3;
+}
+#sidebar-header p { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+#progress-bar-container { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+#progress-bar-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+#progress-bar-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  transition: width 0.5s ease; width: 0%;
+}
+#progress-label { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+#nav { flex: 1; padding: 8px 0; }
+.nav-section {
+  padding: 10px 20px 4px; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 20px; cursor: pointer; transition: background 0.15s;
+  color: var(--text-dim); font-size: 13px; border-right: 2px solid transparent;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(88,166,255,0.1); color: var(--blue); border-right-color: var(--blue); }
+.nav-item.completed { color: var(--green); }
+.nav-item .nn {
+  width: 20px; height: 20px; background: var(--border); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; flex-shrink: 0;
+}
+.nav-item.active .nn { background: var(--blue); color: #fff; }
+.nav-item.completed .nn { background: var(--green); color: #fff; }
+/* ── MAIN ── */
+#main { margin-left: var(--sidebar-w); flex: 1; max-width: 820px; padding: 52px 60px; }
+.module { display: none; animation: fadeUp 0.3s ease; }
+.module.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+/* Tags */
+.mtag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px;
+  border-radius: 20px; margin-bottom: 16px;
+}
+.tag-intro { background: rgba(88,166,255,0.12); color: var(--blue); }
+.tag-basic { background: rgba(63,185,80,0.12); color: var(--green); }
+.tag-medium { background: rgba(232,195,71,0.12); color: var(--gold-light); }
+.tag-advanced { background: rgba(188,140,255,0.12); color: var(--purple); }
+.tag-quiz { background: rgba(248,81,73,0.12); color: var(--red); }
+/* Typography */
+.module h2 {
+  font-family: 'Merriweather', serif; font-size: 30px;
+  font-weight: 700; color: #e6edf3; line-height: 1.25; margin-bottom: 10px;
+}
+.module .subtitle { font-size: 16px; color: var(--text-dim); margin-bottom: 40px; font-weight: 300; }
+.module h3 {
+  font-family: 'Merriweather', serif; font-size: 19px;
+  font-weight: 700; color: #e6edf3; margin: 40px 0 12px;
+}
+.module h4 {
+  font-size: 13px; font-weight: 600; color: var(--gold-light);
+  text-transform: uppercase; letter-spacing: 0.6px; margin: 24px 0 8px;
+}
+.module p { font-size: 15px; line-height: 1.85; color: var(--text); margin-bottom: 16px; }
+ul.content-list { padding-left: 20px; margin-bottom: 16px; }
+ul.content-list li { font-size: 15px; line-height: 1.8; color: var(--text); margin-bottom: 4px; }
+/* Math */
+.math-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0;
+  padding: 18px 24px; margin: 20px 0; overflow-x: auto;
+}
+.math-box .eq-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+/* Info boxes */
+.box {
+  border-radius: 8px; padding: 16px 20px; margin: 20px 0;
+  border: 1px solid; font-size: 14px; line-height: 1.7;
+}
+.box-info { background: rgba(88,166,255,0.05); border-color: rgba(88,166,255,0.25); }
+.box-warn { background: rgba(232,195,71,0.05); border-color: rgba(232,195,71,0.3); }
+.box-success { background: rgba(63,185,80,0.05); border-color: rgba(63,185,80,0.25); }
+.box-tip { background: rgba(188,140,255,0.05); border-color: rgba(188,140,255,0.25); }
+.box-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.box-info .box-title { color: var(--blue); }
+.box-warn .box-title { color: var(--gold-light); }
+.box-success .box-title { color: var(--green); }
+.box-tip .box-title { color: var(--purple); }
+.box p { margin: 0; color: var(--text); }
+/* Cards grid */
+.cg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px;
+}
+.cc-ico { font-size: 22px; margin-bottom: 8px; }
+.cc-t { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 5px; }
+.cc-d { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+/* Table */
+table.dt { width: 100%; border-collapse: collapse; font-size: 13px; margin: 20px 0; }
+table.dt th {
+  background: var(--surface2); padding: 10px 14px; text-align: left;
+  font-weight: 600; color: var(--text-dim); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+}
+table.dt td { padding: 10px 14px; border-bottom: 1px solid rgba(48,54,61,0.6); color: var(--text); }
+table.dt tr:hover td { background: var(--surface); }
+/* Canvas */
+.vis {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;
+}
+.vis canvas { display: block; margin: 0 auto; border-radius: 6px; }
+.vis-caption { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+/* SCF Diagram */
+.scf { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 20px 0; }
+.scf-node {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 28px; font-size: 13px; text-align: center;
+  width: 320px; position: relative;
+}
+.scf-node.hl-b { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.05); }
+.scf-node.hl-g { border-color: var(--green); color: var(--green); background: rgba(63,185,80,0.05); }
+.scf-node.hl-p { border-color: var(--purple); color: var(--purple); background: rgba(188,140,255,0.05); }
+.scf-node.hl-y { border-color: var(--gold-light); color: var(--gold-light); background: rgba(232,195,71,0.05); }
+.scf-arr { color: var(--text-dim); font-size: 18px; line-height: 1; padding: 2px 0; }
+.scf-loop-row { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; }
+.scf-badge {
+  font-size: 10px; color: var(--gold-light); background: rgba(232,195,71,0.1);
+  border: 1px solid rgba(232,195,71,0.3); border-radius: 4px; padding: 2px 8px;
+}
+/* Jacob's Ladder */
+.jl { margin: 20px 0; }
+.jl-rung {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 20px; border-radius: 8px; margin-bottom: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.jl-lv {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+}
+.jr1 { background: rgba(63,185,80,0.06); }
+.jr1 .jl-lv { background: rgba(63,185,80,0.18); color: var(--green); }
+.jr2 { background: rgba(88,166,255,0.06); }
+.jr2 .jl-lv { background: rgba(88,166,255,0.18); color: var(--blue); }
+.jr3 { background: rgba(232,195,71,0.06); }
+.jr3 .jl-lv { background: rgba(232,195,71,0.18); color: var(--gold-light); }
+.jr4 { background: rgba(188,140,255,0.06); }
+.jr4 .jl-lv { background: rgba(188,140,255,0.18); color: var(--purple); }
+.jr5 { background: rgba(248,81,73,0.06); }
+.jr5 .jl-lv { background: rgba(248,81,73,0.18); color: var(--red); }
+.jl-info h5 { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 2px; }
+.jl-info p { font-size: 12px; color: var(--text-dim); margin: 0; }
+.jl-acc { margin-left: auto; font-size: 12px; color: var(--text-dim); text-align: right; }
+/* Timeline */
+.tl { border-left: 1px solid var(--border); padding-left: 24px; margin: 20px 0; }
+.tl-item { position: relative; padding-bottom: 22px; }
+.tl-item::before {
+  content: ''; position: absolute; left: -29px; top: 6px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--gold); border: 2px solid var(--bg);
+}
+.tl-year { font-size: 12px; font-weight: 600; color: var(--gold-light); margin-bottom: 3px; }
+.tl-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+/* Nav buttons */
+.nav-btns {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 52px; padding-top: 28px; border-top: 1px solid var(--border);
+}
+.btn {
+  padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-family: inherit;
+}
+.btn:hover:not(:disabled) { background: var(--surface2); border-color: var(--text-dim); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover:not(:disabled) { opacity: 0.85; }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+/* Quiz */
+.quiz-q { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+.quiz-q-num { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.quiz-q-text { font-size: 15px; font-weight: 500; color: #e6edf3; margin-bottom: 14px; line-height: 1.5; }
+.quiz-opts { display: flex; flex-direction: column; gap: 7px; }
+.quiz-opt {
+  display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 14px; color: var(--text);
+  font-family: inherit; text-align: left; width: 100%;
+}
+.quiz-opt:hover:not(.disabled) { border-color: var(--blue); background: rgba(88,166,255,0.05); }
+.quiz-opt.correct { background: rgba(63,185,80,0.1); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong { background: rgba(248,81,73,0.1); border-color: var(--red); color: var(--red); }
+.quiz-opt.disabled { cursor: default; }
+.opt-lbl {
+  width: 22px; height: 22px; background: var(--border); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  font-weight: 700; flex-shrink: 0;
+}
+.quiz-exp {
+  margin-top: 10px; padding: 10px 14px;
+  background: rgba(88,166,255,0.05); border-left: 3px solid var(--blue);
+  border-radius: 0 6px 6px 0; font-size: 13px; color: var(--text-dim);
+  display: none; line-height: 1.6;
+}
+.quiz-exp.show { display: block; }
+#quiz-score {
+  text-align: center; padding: 36px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; margin-top: 24px; display: none;
+}
+#quiz-score h3 { font-family: 'Merriweather', serif; font-size: 22px; margin-bottom: 8px; color: #e6edf3; }
+#quiz-score .snum { font-size: 52px; font-weight: 700; color: var(--gold-light); line-height: 1; margin: 12px 0; }
+#quiz-score p { font-size: 15px; color: var(--text-dim); }
+/* Highlights */
+code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 4px; color: var(--purple); }
+.hl { color: var(--blue); font-weight: 500; }
+.hlg { color: var(--gold-light); font-weight: 500; }
+.hlr { color: var(--green); font-weight: 500; }
+.hlp { color: var(--purple); font-weight: 500; }
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+/* Basis comparison */
+.basis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+.basis-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.basis-card .bct { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 6px; }
+.basis-card .bcs { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+.basis-card.recommended { border-color: var(--blue); }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* Mobile */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-272px); transition: transform 0.3s; width: 272px; }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; padding: 24px 20px; }
+  .cg, .basis-grid { grid-template-columns: 1fr; }
+  .module h2 { font-size: 22px; }
+  #menu-btn { display: flex !important; }
+}
+#menu-btn {
+  display: none; position: fixed; bottom: 20px; right: 20px;
+  width: 48px; height: 48px; background: var(--blue); border-radius: 50%;
+  align-items: center; justify-content: center; cursor: pointer;
+  font-size: 22px; z-index: 200; border: none; color: #fff;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">⚛</div>
+      <div>
+        <h1>Lý Thuyết Hàm Mật Độ</h1>
+        <p>Density Functional Theory</p>
+      </div>
+    </div>
+  </div>
+  <div id="progress-bar-container">
+    <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+    <div id="progress-label">0 / 10 module hoàn thành</div>
+  </div>
+  <nav id="nav">
+    <div class="nav-section">Giới thiệu</div>
+    <div class="nav-item active" data-mod="0"><span class="nn">0</span> Tổng quan về DFT</div>
+
+    <div class="nav-section">Cơ bản</div>
+    <div class="nav-item" data-mod="1"><span class="nn">1</span> Nền tảng cơ học lượng tử</div>
+    <div class="nav-item" data-mod="2"><span class="nn">2</span> Bài toán nhiều electron</div>
+    <div class="nav-item" data-mod="3"><span class="nn">3</span> Hàm mật độ electron</div>
+
+    <div class="nav-section">Trung cấp</div>
+    <div class="nav-item" data-mod="4"><span class="nn">4</span> Định lý Hohenberg-Kohn</div>
+    <div class="nav-item" data-mod="5"><span class="nn">5</span> Phương trình Kohn-Sham</div>
+    <div class="nav-item" data-mod="6"><span class="nn">6</span> Functional XC & Jacob's Ladder</div>
+    <div class="nav-item" data-mod="7"><span class="nn">7</span> Basis Sets</div>
+
+    <div class="nav-section">Nâng cao</div>
+    <div class="nav-item" data-mod="8"><span class="nn">8</span> Hybrid & Dispersion DFT-D3</div>
+    <div class="nav-item" data-mod="9"><span class="nn">9</span> TD-DFT & Ứng dụng thực tế</div>
+
+    <div class="nav-item" data-mod="10"><span class="nn">10</span> Tham số tính toán thực tế</div>
+    <div class="nav-item" data-mod="11"><span class="nn">11</span> Hướng dẫn sử dụng ORCA</div>
+
+    <div class="nav-section">Kiểm tra</div>
+    <div class="nav-item" data-mod="quiz"><span class="nn">✓</span> Bài kiểm tra tổng hợp</div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+
+<!-- MODULE 0: Intro -->
+<section class="module active" id="mod-0">
+  <span class="mtag tag-intro">Giới thiệu</span>
+  <h2>Tổng quan về Lý thuyết Hàm Mật Độ</h2>
+  <p class="subtitle">Tại sao DFT là "ngôn ngữ toán học" của hóa học hiện đại?</p>
+
+  <p>Lý thuyết Hàm Mật Độ (<span class="hl">Density Functional Theory — DFT</span>) là một trong những phương pháp tính toán lượng tử được sử dụng rộng rãi nhất trong hóa học, vật lý và khoa học vật liệu. DFT cho phép chúng ta tính toán cấu trúc điện tử của các phân tử và vật liệu từ nguyên lý đầu tiên (<em>ab initio</em>), mà không cần bất kỳ tham số thực nghiệm nào.</p>
+
+  <div class="box box-info">
+    <div class="box-title">💡 Ý tưởng cốt lõi</div>
+    <p>Thay vì tính toán hàm sóng nhiều electron $\Psi(\mathbf{r}_1, \mathbf{r}_2, \ldots, \mathbf{r}_N)$ — một bài toán cực kỳ phức tạp — DFT chứng minh rằng <strong>mật độ electron $\rho(\mathbf{r})$</strong> (chỉ là hàm 3 biến!) chứa đủ thông tin để xác định mọi tính chất của hệ.</p>
+  </div>
+
+  <h3>🏆 Tại sao DFT quan trọng?</h3>
+  <div class="cg">
+    <div class="cc"><div class="cc-ico">⚗️</div><div class="cc-t">Thiết kế thuốc</div><div class="cc-d">Dự đoán tương tác protein-ligand, năng lượng liên kết, và tính chất ADMET của phân tử dược chất.</div></div>
+    <div class="cc"><div class="cc-ico">🔋</div><div class="cc-t">Vật liệu năng lượng</div><div class="cc-d">Thiết kế pin lithium-ion, vật liệu quang điện, xúc tác phản ứng hydrogen evolution.</div></div>
+    <div class="cc"><div class="cc-ico">🧪</div><div class="cc-t">Hóa học tính toán</div><div class="cc-d">Dự đoán phổ IR/Raman/UV-Vis, năng lượng hoạt hóa, và cơ chế phản ứng hóa học.</div></div>
+    <div class="cc"><div class="cc-ico">💻</div><div class="cc-t">Khoa học vật liệu</div><div class="cc-d">Tính band gap, tính chất từ, độ dẫn điện của vật liệu bán dẫn, graphene, perovskite.</div></div>
+  </div>
+
+  <h3>📅 Lịch sử phát triển</h3>
+  <div class="tl">
+    <div class="tl-item"><div class="tl-year">1927</div><div class="tl-text"><strong>Thomas–Fermi model:</strong> Lần đầu tiên mô tả hệ electron bằng mật độ, không dùng hàm sóng. Quá đơn giản nhưng là nền tảng ý tưởng.</div></div>
+    <div class="tl-item"><div class="tl-year">1964</div><div class="tl-text"><strong>Hohenberg & Kohn:</strong> Chứng minh 2 định lý nền tảng — mọi tính chất cơ bản được xác định bởi $\rho(\mathbf{r})$. Bước đột phá lý thuyết.</div></div>
+    <div class="tl-item"><div class="tl-year">1965</div><div class="tl-text"><strong>Kohn & Sham:</strong> Đề xuất phương trình Kohn-Sham thực tế, biến DFT thành phương pháp tính toán khả thi. Trung tâm của DFT hiện đại.</div></div>
+    <div class="tl-item"><div class="tl-year">1988</div><div class="tl-text"><strong>Becke & Lee-Yang-Parr:</strong> Phát triển functional GGA (B88, LYP), cải thiện đáng kể độ chính xác. <code>B3LYP</code> ra đời sau đó trở thành tiêu chuẩn vàng.</div></div>
+    <div class="tl-item"><div class="tl-year">1998</div><div class="tl-text"><strong>Nobel Hóa học:</strong> Walter Kohn (DFT) và John Pople (phương pháp tính toán lượng tử). DFT chính thức được công nhận là thành tựu khoa học vĩ đại.</div></div>
+    <div class="tl-item"><div class="tl-year">Ngày nay</div><div class="tl-text">DFT chiếm ~70% tổng số bài báo hóa học tính toán. Phần mềm như Gaussian, VASP, Quantum ESPRESSO được dùng trên toàn thế giới.</div></div>
+  </div>
+
+  <h3>📚 Cấu trúc module này</h3>
+  <p>Module được thiết kế theo lộ trình từ cơ bản đến nâng cao:</p>
+  <ul class="content-list">
+    <li><span class="hlr">Cơ bản (Module 1–3):</span> Ôn lại cơ học lượng tử, bài toán nhiều electron, hàm mật độ electron.</li>
+    <li><span class="hlg">Trung cấp (Module 4–7):</span> Hai định lý Hohenberg-Kohn, phương trình Kohn-Sham, các loại functional và basis sets.</li>
+    <li><span class="hlp">Nâng cao (Module 8–9):</span> Hybrid functional, hiệu chỉnh dispersion, TD-DFT và ứng dụng thực tế.</li>
+    <li><span class="hl">Kiểm tra:</span> 12 câu hỏi trắc nghiệm tổng hợp.</li>
+  </ul>
+
+  <div class="box box-warn">
+    <div class="box-title">📋 Yêu cầu đầu vào</div>
+    <p>Bạn cần có kiến thức cơ bản về: Hóa đại cương, Vật lý (sóng, lượng tử hóa năng lượng), và phép tính vi tích phân cơ bản. Không cần biết lập trình.</p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn" disabled>← Trước</button>
+    <button class="btn primary" onclick="goTo(1)">Bắt đầu học →</button>
+  </div>
+</section>
+
+<!-- MODULE 1: QM Foundations -->
+<section class="module" id="mod-1">
+  <span class="mtag tag-basic">Cơ bản — Module 1</span>
+  <h2>Nền tảng Cơ học Lượng tử</h2>
+  <p class="subtitle">Phương trình Schrödinger và Toán tử Hamiltonian</p>
+
+  <p>Trước khi học DFT, chúng ta cần nắm vững phương trình Schrödinger — phương trình cơ bản mô tả mọi hệ lượng tử.</p>
+
+  <h3>Phương trình Schrödinger</h3>
+  <p>Phương trình Schrödinger không phụ thuộc thời gian:</p>
+  <div class="math-box">
+    <div class="eq-label">Phương trình Schrödinger tổng quát</div>
+    $$\hat{H}\Psi = E\Psi$$
+  </div>
+  <p>Trong đó: $\hat{H}$ là toán tử Hamiltonian (tổng năng lượng của hệ), $\Psi$ là hàm sóng, $E$ là giá trị riêng năng lượng.</p>
+
+  <h3>Toán tử Hamiltonian đầy đủ</h3>
+  <p>Với một phân tử gồm $M$ hạt nhân và $N$ electron, Hamiltonian đầy đủ là:</p>
+  <div class="math-box">
+    <div class="eq-label">Hamiltonian phân tử (đơn vị nguyên tử)</div>
+    $$\hat{H} = \underbrace{-\sum_{i=1}^{N}\frac{1}{2}\nabla_i^2}_{\hat{T}_e} \underbrace{-\sum_{A=1}^{M}\frac{1}{2M_A}\nabla_A^2}_{\hat{T}_N} \underbrace{-\sum_{i=1}^{N}\sum_{A=1}^{M}\frac{Z_A}{r_{iA}}}_{\hat{V}_{Ne}} \underbrace{+\sum_{i<j}\frac{1}{r_{ij}}}_{\hat{V}_{ee}} \underbrace{+\sum_{A<B}\frac{Z_AZ_B}{R_{AB}}}_{\hat{V}_{NN}}$$
+  </div>
+
+  <table class="dt">
+    <tr><th>Số hạng</th><th>Ký hiệu</th><th>Ý nghĩa vật lý</th></tr>
+    <tr><td>$-\frac{1}{2}\nabla_i^2$</td><td>$\hat{T}_e$</td><td>Động năng electron $i$</td></tr>
+    <tr><td>$-\frac{1}{2M_A}\nabla_A^2$</td><td>$\hat{T}_N$</td><td>Động năng hạt nhân $A$</td></tr>
+    <tr><td>$-Z_A / r_{iA}$</td><td>$\hat{V}_{Ne}$</td><td>Hút giữa electron $i$ và hạt nhân $A$</td></tr>
+    <tr><td>$1/r_{ij}$</td><td>$\hat{V}_{ee}$</td><td>Đẩy giữa electron $i$ và $j$</td></tr>
+    <tr><td>$Z_AZ_B/R_{AB}$</td><td>$\hat{V}_{NN}$</td><td>Đẩy giữa hạt nhân $A$ và $B$</td></tr>
+  </table>
+
+  <h3>Xấp xỉ Born-Oppenheimer</h3>
+  <p>Do khối lượng hạt nhân lớn hơn electron ~1836 lần, hạt nhân chuyển động <em>rất chậm</em> so với electron. Ta có thể <span class="hl">đóng băng hạt nhân</span> và chỉ giải bài toán electron với vị trí hạt nhân cố định:</p>
+  <div class="math-box">
+    <div class="eq-label">Hamiltonian điện tử (Born-Oppenheimer)</div>
+    $$\hat{H}_{el} = \hat{T}_e + \hat{V}_{Ne} + \hat{V}_{ee} = -\sum_{i}\frac{1}{2}\nabla_i^2 - \sum_{i,A}\frac{Z_A}{r_{iA}} + \sum_{i<j}\frac{1}{r_{ij}}$$
+  </div>
+
+  <div class="box box-success">
+    <div class="box-title">✅ Kết quả</div>
+    <p>Sau xấp xỉ Born-Oppenheimer, bài toán cần giải là: $\hat{H}_{el}\Psi_{el} = E_{el}\Psi_{el}$. Năng lượng toàn phần: $E_{total} = E_{el} + V_{NN}$.</p>
+  </div>
+
+  <h3>Vấn đề lớn nhất: số bậc tự do</h3>
+  <p>Hàm sóng electron $\Psi(\mathbf{r}_1, \mathbf{r}_2, \ldots, \mathbf{r}_N)$ phụ thuộc vào <span class="hl">$3N$ biến</span> (3 tọa độ cho mỗi electron). Với phân tử benzene C₆H₆ có 42 electron → hàm sóng có <strong>126 biến</strong>! Đây là bài toán không thể giải trực tiếp.</p>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Sự bùng nổ số chiều</div>
+    <p>Nếu rời rạc hóa mỗi chiều thành 10 điểm: hàm sóng H₂ (2e) cần $10^6$ số. CO₂ (22e) cần $10^{66}$ số — <em>nhiều hơn số nguyên tử trong vũ trụ quan sát được</em>. DFT giải quyết vấn đề này.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(0)">← Trước</button>
+    <button class="btn primary" onclick="goTo(2)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 2: Many-electron Problem -->
+<section class="module" id="mod-2">
+  <span class="mtag tag-basic">Cơ bản — Module 2</span>
+  <h2>Bài toán Nhiều Electron</h2>
+  <p class="subtitle">Hàm sóng phản đối xứng và Định thức Slater</p>
+
+  <h3>Nguyên lý phản đối xứng</h3>
+  <p>Electron là <span class="hl">fermion</span> — hàm sóng nhiều electron phải <strong>đổi dấu</strong> khi hoán vị bất kỳ 2 electron:</p>
+  <div class="math-box">
+    <div class="eq-label">Điều kiện phản đối xứng</div>
+    $$\Psi(\mathbf{x}_1, \ldots, \mathbf{x}_i, \ldots, \mathbf{x}_j, \ldots, \mathbf{x}_N) = -\Psi(\mathbf{x}_1, \ldots, \mathbf{x}_j, \ldots, \mathbf{x}_i, \ldots, \mathbf{x}_N)$$
+  </div>
+  <p>Hệ quả trực tiếp: <span class="hlg">Nguyên lý loại trừ Pauli</span> — không có 2 electron nào chiếm cùng trạng thái lượng tử.</p>
+
+  <h3>Định thức Slater</h3>
+  <p>Cách đơn giản nhất để xây dựng hàm sóng phản đối xứng là dùng <span class="hlg">Định thức Slater</span>:</p>
+  <div class="math-box">
+    <div class="eq-label">Định thức Slater cho N electron</div>
+    $$\Psi_{SD}(\mathbf{x}_1,\ldots,\mathbf{x}_N) = \frac{1}{\sqrt{N!}} \begin{vmatrix} \chi_1(\mathbf{x}_1) & \chi_2(\mathbf{x}_1) & \cdots & \chi_N(\mathbf{x}_1) \\ \chi_1(\mathbf{x}_2) & \chi_2(\mathbf{x}_2) & \cdots & \chi_N(\mathbf{x}_2) \\ \vdots & \vdots & \ddots & \vdots \\ \chi_1(\mathbf{x}_N) & \chi_2(\mathbf{x}_N) & \cdots & \chi_N(\mathbf{x}_N) \end{vmatrix}$$
+  </div>
+  <p>Trong đó $\chi_i(\mathbf{x}) = \phi_i(\mathbf{r})\sigma_i$ là <em>spin-orbital</em> (tích của orbital không gian và hàm spin $\alpha$ hoặc $\beta$).</p>
+
+  <div class="box box-info">
+    <div class="box-title">💡 Tính chất quan trọng</div>
+    <p>Nếu 2 hàng của định thức giống nhau ($\chi_i = \chi_j$), định thức bằng 0. Đây chính là biểu hiện toán học của Nguyên lý Pauli.</p>
+  </div>
+
+  <h3>Phương pháp Hartree-Fock (HF)</h3>
+  <p>HF giải quyết bài toán nhiều electron bằng cách dùng <em>một</em> định thức Slater và áp dụng nguyên lý biến phân. Phương trình Hartree-Fock:</p>
+  <div class="math-box">
+    <div class="eq-label">Phương trình Fock</div>
+    $$\hat{f}_i \chi_j = \varepsilon_j \chi_j$$
+    $$\hat{f}_i = \hat{h}_i + \sum_{j\neq i}(\hat{J}_j - \hat{K}_j)$$
+  </div>
+  <p>$\hat{J}_j$ là toán tử Coulomb (tương tác tĩnh điện), $\hat{K}_j$ là toán tử trao đổi (exchange) — xuất phát từ tính phản đối xứng.</p>
+
+  <h3>Vấn đề của HF và nhu cầu cần DFT</h3>
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">❌</div>
+      <div class="cc-t">Thiếu tương quan electron</div>
+      <div class="cc-d">HF bỏ qua <em>dynamic correlation</em> — chuyển động tương quan giữa các electron do tương tác đẩy tức thời $1/r_{ij}$. Sai số hàng chục kcal/mol.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">💸</div>
+      <div class="cc-t">Chi phí tính toán cao</div>
+      <div class="cc-d">HF tốn $\mathcal{O}(N^4)$. Phương pháp post-HF như CCSD(T) tốn $\mathcal{O}(N^7)$ — không thể áp dụng cho hệ lớn.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">✅</div>
+      <div class="cc-t">DFT giải quyết</div>
+      <div class="cc-d">DFT bao gồm tương quan thông qua functional trao đổi-tương quan $E_{xc}[\rho]$, với chi phí chỉ $\mathcal{O}(N^3)$ hoặc thấp hơn.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">📊</div>
+      <div class="cc-t">So sánh phương pháp</div>
+      <div class="cc-d">HF: chính xác ~99% năng lượng, nhưng 1% còn lại (~100 kcal/mol) là quan trọng nhất cho hóa học. DFT thường tốt hơn với chi phí rẻ hơn.</div>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(1)">← Trước</button>
+    <button class="btn primary" onclick="goTo(3)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 3: Electron Density -->
+<section class="module" id="mod-3">
+  <span class="mtag tag-basic">Cơ bản — Module 3</span>
+  <h2>Hàm Mật Độ Electron</h2>
+  <p class="subtitle">Từ $3N$ chiều xuống 3 chiều — chìa khóa của DFT</p>
+
+  <h3>Định nghĩa mật độ electron</h3>
+  <p>Mật độ electron $\rho(\mathbf{r})$ được định nghĩa là xác suất tìm thấy <em>bất kỳ</em> electron nào tại vị trí $\mathbf{r}$, tích phân trên toàn bộ tọa độ còn lại:</p>
+  <div class="math-box">
+    <div class="eq-label">Định nghĩa mật độ electron</div>
+    $$\rho(\mathbf{r}) = N \int |\Psi(\mathbf{r}, \mathbf{r}_2, \mathbf{r}_3, \ldots, \mathbf{r}_N)|^2 \, d\mathbf{r}_2 d\mathbf{r}_3 \cdots d\mathbf{r}_N$$
+  </div>
+
+  <h3>Tính chất của $\rho(\mathbf{r})$</h3>
+  <ul class="content-list">
+    <li>$\rho(\mathbf{r}) \geq 0$ — mật độ không âm</li>
+    <li>$\int \rho(\mathbf{r}) \, d\mathbf{r} = N$ — tích phân toàn bộ = số electron</li>
+    <li>$\rho(\mathbf{r} \to \infty) = 0$ — mật độ triệt tiêu ở vô cực</li>
+    <li>$\rho(\mathbf{r})$ có các cực đại cục bộ tại vị trí hạt nhân</li>
+    <li>Từ $\rho(\mathbf{r})$, ta có thể xác định $Z_A$ của hạt nhân qua điều kiện cusp của Kato</li>
+  </ul>
+
+  <h3>Hình ảnh hóa mật độ electron</h3>
+  <div class="vis">
+    <canvas id="densityCanvas" width="680" height="220"></canvas>
+    <div class="vis-caption">Mật độ electron 2D của phân tử H₂O — màu sáng = mật độ cao, màu tối = mật độ thấp</div>
+  </div>
+
+  <h3>So sánh: Hàm sóng vs. Mật độ electron</h3>
+  <table class="dt">
+    <tr><th></th><th>Hàm sóng $\Psi$</th><th>Mật độ electron $\rho$</th></tr>
+    <tr><td><strong>Biến số</strong></td><td>$3N$ tọa độ không gian + N spin</td><td>3 tọa độ không gian $(x,y,z)$</td></tr>
+    <tr><td><strong>Ví dụ H₂O (10e)</strong></td><td>30 biến không gian</td><td>3 biến</td></tr>
+    <tr><td><strong>Ý nghĩa vật lý</strong></td><td>Biên độ xác suất (không quan sát được)</td><td>Mật độ xác suất (có thể đo bằng nhiễu xạ X-ray)</td></tr>
+    <tr><td><strong>Công thức HK</strong></td><td>$\Psi \to \rho$ (nhiều-một)</td><td>$\rho \to \Psi$ (một-một, HK1)</td></tr>
+  </table>
+
+  <div class="box box-tip">
+    <div class="box-title">🔬 Đo mật độ electron trong thực nghiệm</div>
+    <p>Mật độ electron có thể đo trực tiếp bằng <strong>nhiễu xạ tia X</strong> và phân tích Hansen-Coppens. Đây là bằng chứng thực nghiệm cho thấy $\rho(\mathbf{r})$ là đại lượng thực tế, không chỉ là khái niệm lý thuyết.</p>
+  </div>
+
+  <h3>Năng lượng là hàm số của mật độ</h3>
+  <p>Ý tưởng của Thomas và Fermi (1927) là biểu diễn năng lượng trực tiếp từ $\rho(\mathbf{r})$ — gọi là <span class="hl">functional</span> (phiếm hàm):</p>
+  <div class="math-box">
+    <div class="eq-label">Năng lượng Thomas-Fermi (phép xấp xỉ sớm nhất)</div>
+    $$E_{TF}[\rho] = C_F \int \rho^{5/3}(\mathbf{r}) \, d\mathbf{r} - \sum_A Z_A \int \frac{\rho(\mathbf{r})}{|\mathbf{r}-\mathbf{R}_A|} d\mathbf{r} + \frac{1}{2}\iint \frac{\rho(\mathbf{r})\rho(\mathbf{r}')}{|\mathbf{r}-\mathbf{r}'|} d\mathbf{r} d\mathbf{r}'$$
+  </div>
+  <p>Thomas-Fermi quá thô (không có liên kết hóa học!), nhưng ý tưởng $E = E[\rho]$ chính là nền tảng của DFT hiện đại.</p>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(2)">← Trước</button>
+    <button class="btn primary" onclick="goTo(4)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 4: HK Theorems -->
+<section class="module" id="mod-4">
+  <span class="mtag tag-medium">Trung cấp — Module 4</span>
+  <h2>Định lý Hohenberg-Kohn</h2>
+  <p class="subtitle">Nền tảng lý thuyết của DFT — công bố năm 1964</p>
+
+  <p>Năm 1964, Hohenberg và Kohn công bố một bài báo chỉ 3 trang nhưng thay đổi toàn bộ hóa học lý thuyết. Họ chứng minh 2 định lý có tính nền tảng.</p>
+
+  <h3>Định lý HK thứ nhất</h3>
+  <div class="box box-info">
+    <div class="box-title">📜 Định lý HK-1 (Tính xác định duy nhất)</div>
+    <p><em>Thế năng bên ngoài $v_{ext}(\mathbf{r})$ (do hạt nhân tạo ra) được xác định duy nhất bởi mật độ electron $\rho_0(\mathbf{r})$ của trạng thái cơ bản — trừ hằng số cộng thêm tầm thường.</em></p>
+  </div>
+  <p>Vì $v_{ext}$ xác định $\hat{H}$, mà $\hat{H}$ xác định $\Psi_0$ (trạng thái cơ bản), và $\Psi_0$ xác định mọi tính chất quan sát được, ta có chuỗi:</p>
+  <div class="math-box">
+    <div class="eq-label">Chuỗi xác định một-một</div>
+    $$\rho_0(\mathbf{r}) \xrightarrow{\text{HK1}} v_{ext}(\mathbf{r}) \longrightarrow \hat{H} \longrightarrow \Psi_0 \longrightarrow \text{mọi tính chất}$$
+  </div>
+
+  <div class="box box-tip">
+    <div class="box-title">💡 Ý nghĩa sâu xa</div>
+    <p>HK-1 nói rằng nếu biết $\rho(\mathbf{r})$, về nguyên tắc ta biết <em>tất cả</em> — cấu trúc phân tử, năng lượng, phổ, từ tính, v.v. Mật độ electron là "DNA" của hệ lượng tử.</p>
+  </div>
+
+  <h3>Chứng minh bằng phản chứng</h3>
+  <p>Giả sử tồn tại 2 thế năng khác nhau $v$ và $v'$ cùng cho ra $\rho_0$. Chúng tạo ra 2 Hamiltonian $\hat{H}$ và $\hat{H}'$, 2 hàm sóng $\Psi_0$ và $\Psi_0'$. Áp dụng nguyên lý biến phân:</p>
+  <div class="math-box">
+    <div class="eq-label">Mâu thuẫn trong chứng minh HK-1</div>
+    $$E_0 < \langle \Psi_0' | \hat{H} | \Psi_0' \rangle = E_0' + \int \rho_0(\mathbf{r})[v(\mathbf{r}) - v'(\mathbf{r})] d\mathbf{r}$$
+    $$E_0' < \langle \Psi_0 | \hat{H}' | \Psi_0 \rangle = E_0 - \int \rho_0(\mathbf{r})[v(\mathbf{r}) - v'(\mathbf{r})] d\mathbf{r}$$
+    $$\Rightarrow E_0 + E_0' < E_0' + E_0 \quad \text{(Mâu thuẫn!)}$$
+  </div>
+
+  <h3>Định lý HK thứ hai</h3>
+  <div class="box box-info">
+    <div class="box-title">📜 Định lý HK-2 (Nguyên lý biến phân)</div>
+    <p><em>Với một mật độ thử $\tilde{\rho}(\mathbf{r})$ bất kỳ (N-representable và $v$-representable), năng lượng tương ứng luôn ≥ năng lượng trạng thái cơ bản thực:</em></p>
+    $$E_{v}[\tilde{\rho}] \geq E_0 = E_v[\rho_0]$$
+  </div>
+
+  <h3>Phân tích năng lượng HK</h3>
+  <p>Năng lượng toàn phần là functional của $\rho$:</p>
+  <div class="math-box">
+    <div class="eq-label">Phân tích năng lượng Hohenberg-Kohn</div>
+    $$E_{HK}[\rho] = \underbrace{F_{HK}[\rho]}_{\text{Universal}} + \underbrace{\int v_{ext}(\mathbf{r})\rho(\mathbf{r}) \, d\mathbf{r}}_{\text{System-specific}}$$
+    $$F_{HK}[\rho] = T[\rho] + V_{ee}[\rho] = \langle\Psi[\rho]|\hat{T}+\hat{V}_{ee}|\Psi[\rho]\rangle$$
+  </div>
+
+  <p>$F_{HK}[\rho]$ là <span class="hlg">universal functional</span> — giống nhau cho mọi hệ electron, bất kể hạt nhân. Nếu biết $F_{HK}$ chính xác, ta giải được bài toán electron chính xác. <strong>Vấn đề: ta không biết dạng chính xác của $F_{HK}$!</strong></p>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Giới hạn của lý thuyết HK</div>
+    <p>HK chứng minh $\rho$ chứa đủ thông tin, nhưng KHÔNG cho ta công thức để tính. Kohn-Sham (1965) giải quyết vấn đề thực tế này — xem Module 5.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(3)">← Trước</button>
+    <button class="btn primary" onclick="goTo(5)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 5: Kohn-Sham -->
+<section class="module" id="mod-5">
+  <span class="mtag tag-medium">Trung cấp — Module 5</span>
+  <h2>Phương trình Kohn-Sham</h2>
+  <p class="subtitle">Biến DFT từ lý thuyết thành phương pháp tính toán thực tiễn</p>
+
+  <p>HK cho biết năng lượng là functional của $\rho$, nhưng không nói cách tính. Kohn và Sham (1965) đề xuất một chiến lược tinh tế: <span class="hl">thay thế hệ tương tác bằng hệ không tương tác giả định</span>.</p>
+
+  <h3>Hệ Kohn-Sham (không tương tác)</h3>
+  <p>Xét một hệ giả định gồm $N$ electron <em>không tương tác nhau</em>, chuyển động trong thế năng hiệu dụng $v_s(\mathbf{r})$, với mật độ electron <strong>giống hệt</strong> hệ thực:</p>
+  <div class="math-box">
+    <div class="eq-label">Phương trình Kohn-Sham (phương trình KS)</div>
+    $$\left[-\frac{1}{2}\nabla^2 + v_s(\mathbf{r})\right]\phi_i(\mathbf{r}) = \varepsilon_i \phi_i(\mathbf{r})$$
+  </div>
+
+  <p>$\phi_i$ là <span class="hlg">KS orbital</span>, $\varepsilon_i$ là năng lượng orbital KS. Mật độ electron tái tạo từ KS orbital:</p>
+  <div class="math-box">
+    <div class="eq-label">Mật độ electron từ KS orbital</div>
+    $$\rho(\mathbf{r}) = \sum_{i=1}^{N} |\phi_i(\mathbf{r})|^2$$
+  </div>
+
+  <h3>Thế năng hiệu dụng KS</h3>
+  <div class="math-box">
+    <div class="eq-label">Thành phần của thế KS</div>
+    $$v_s(\mathbf{r}) = v_{ext}(\mathbf{r}) + v_H(\mathbf{r}) + v_{xc}(\mathbf{r})$$
+    $$v_H(\mathbf{r}) = \int \frac{\rho(\mathbf{r}')}{|\mathbf{r}-\mathbf{r}'|} d\mathbf{r}' \qquad (\text{Hartree potential})$$
+    $$v_{xc}(\mathbf{r}) = \frac{\delta E_{xc}[\rho]}{\delta \rho(\mathbf{r})} \qquad (\text{XC potential})$$
+  </div>
+
+  <h3>Phân tách năng lượng KS</h3>
+  <div class="math-box">
+    <div class="eq-label">Tổng năng lượng KS</div>
+    $$E_{KS}[\rho] = T_s[\rho] + E_{Ne}[\rho] + J[\rho] + E_{xc}[\rho]$$
+    $$T_s[\rho] = -\frac{1}{2}\sum_i \langle\phi_i|\nabla^2|\phi_i\rangle$$
+    $$J[\rho] = \frac{1}{2}\iint \frac{\rho(\mathbf{r})\rho(\mathbf{r}')}{|\mathbf{r}-\mathbf{r}'|} d\mathbf{r} d\mathbf{r}' \qquad (\text{Hartree energy})$$
+  </div>
+
+  <p>$E_{xc}$ (Exchange-Correlation energy) là số hạng duy nhất chưa biết chính xác. Nó chứa: (1) phần trao đổi do tính phản đối xứng, (2) tương quan động, (3) phần bù sai số động năng $T-T_s$.</p>
+
+  <h3>Chu trình SCF (Self-Consistent Field)</h3>
+  <p>Vì $v_s$ phụ thuộc vào $\rho$, mà $\rho$ phụ thuộc vào $\phi_i$, ta phải giải lặp:</p>
+  <div class="scf">
+    <div class="scf-node hl-b">1. Khởi tạo mật độ $\rho^{(0)}(\mathbf{r})$ (thường từ superpositioning nguyên tử)</div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-node hl-p">2. Tính thế KS: $v_s = v_{ext} + v_H[\rho] + v_{xc}[\rho]$</div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-node">3. Giải phương trình KS: $\left[-\frac{1}{2}\nabla^2 + v_s\right]\phi_i = \varepsilon_i\phi_i$</div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-node">4. Tính mật độ mới: $\rho^{new}(\mathbf{r}) = \sum_i |\phi_i(\mathbf{r})|^2$</div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-loop-row">
+      <div class="scf-node hl-y" style="width:auto; padding: 10px 20px;">Kiểm tra hội tụ:<br>$|\rho^{new} - \rho^{old}| < \delta$?</div>
+    </div>
+    <div style="display:flex; gap: 60px; margin-top:4px;">
+      <div style="text-align:center; color:var(--red); font-size:13px;">Chưa → Quay lại bước 2</div>
+      <div style="text-align:center; color:var(--green); font-size:13px;">Rồi ↓</div>
+    </div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-node hl-g">5. Tính năng lượng tổng $E_{KS}[\rho]$, lực, phổ, v.v.</div>
+  </div>
+
+  <div class="box box-success">
+    <div class="box-title">✅ Chi phí tính toán của DFT</div>
+    <p>Bước tốn nhất là giải phương trình KS: $\mathcal{O}(N^3)$. Với các phương pháp DFT tuyến tính (<em>linear-scaling DFT</em>), có thể đạt $\mathcal{O}(N)$ cho hệ lớn. So sánh: CCSD(T) tốn $\mathcal{O}(N^7)$.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(4)">← Trước</button>
+    <button class="btn primary" onclick="goTo(6)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 6: XC Functionals -->
+<section class="module" id="mod-6">
+  <span class="mtag tag-medium">Trung cấp — Module 6</span>
+  <h2>Functional Trao đổi-Tương quan & Jacob's Ladder</h2>
+  <p class="subtitle">Từ LDA đơn giản đến các functional hóa học chính xác</p>
+
+  <p>$E_{xc}[\rho]$ là "con trai hoang đàng" của DFT — chúng ta biết nó tồn tại nhưng không biết dạng chính xác. Năm thập kỷ qua, cộng đồng khoa học đã phát triển hàng trăm công thức xấp xỉ.</p>
+
+  <h3>Jacob's Ladder — Thang Jacob của các Functional</h3>
+  <p>John Perdew đề xuất ẩn dụ "Thang Jacob" để phân loại các functional theo độ chính xác tăng dần:</p>
+
+  <div class="jl">
+    <div class="jl-rung jr1">
+      <div class="jl-lv">1</div>
+      <div class="jl-info">
+        <h5>LDA — Local Density Approximation</h5>
+        <p>$E_{xc}^{LDA} = \int \rho(\mathbf{r}) \varepsilon_{xc}[\rho(\mathbf{r})] \, d\mathbf{r}$ &nbsp;| Chỉ dùng $\rho$ tại mỗi điểm. Ví dụ: <code>VWN, PW92</code></p>
+      </div>
+      <div class="jl-acc">Chính xác<br>~±20 kcal/mol</div>
+    </div>
+    <div class="jl-rung jr2">
+      <div class="jl-lv">2</div>
+      <div class="jl-info">
+        <h5>GGA — Generalized Gradient Approximation</h5>
+        <p>Thêm gradient $\nabla\rho$. Ví dụ: <code>PBE, BLYP, BP86</code></p>
+      </div>
+      <div class="jl-acc">~±5–10 kcal/mol</div>
+    </div>
+    <div class="jl-rung jr3">
+      <div class="jl-lv">3</div>
+      <div class="jl-info">
+        <h5>meta-GGA — Thêm Laplacian và kinetic energy density</h5>
+        <p>Thêm $\nabla^2\rho$ hoặc $\tau = \sum_i |\nabla\phi_i|^2/2$. Ví dụ: <code>TPSS, SCAN, r²SCAN</code></p>
+      </div>
+      <div class="jl-acc">~±3–5 kcal/mol</div>
+    </div>
+    <div class="jl-rung jr4">
+      <div class="jl-lv">4</div>
+      <div class="jl-info">
+        <h5>Hybrid — Trộn trao đổi HF chính xác</h5>
+        <p>$E_x^{hyb} = a \cdot E_x^{HF} + (1-a) \cdot E_x^{GGA}$. Ví dụ: <code>B3LYP, PBE0, HSE06</code></p>
+      </div>
+      <div class="jl-acc">~±1–3 kcal/mol</div>
+    </div>
+    <div class="jl-rung jr5">
+      <div class="jl-lv">5</div>
+      <div class="jl-info">
+        <h5>Double-hybrid — Thêm tương quan MP2</h5>
+        <p>$E_c = a_c E_c^{GGA} + b_c E_c^{MP2}$. Ví dụ: <code>B2PLYP, ωB97X-2</code></p>
+      </div>
+      <div class="jl-acc">~±0.5–1 kcal/mol</div>
+    </div>
+  </div>
+
+  <h3>LDA — Local Density Approximation</h3>
+  <p>LDA giả định tại mỗi điểm trong không gian, electron ứng xử như trong <span class="hl">electron gas đồng nhất</span> với cùng mật độ $\rho$:</p>
+  <div class="math-box">
+    <div class="eq-label">LDA Exchange (Dirac, 1930)</div>
+    $$E_x^{LDA}[\rho] = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{1/3} \int \rho^{4/3}(\mathbf{r}) \, d\mathbf{r}$$
+  </div>
+  <p>LDA hoạt động tốt hơn mong đợi nhờ hiệu ứng bù lỗi giữa exchange (dưới tính) và correlation (trên tính). Tốt cho kim loại, xấu cho phân tử hữu cơ.</p>
+
+  <h3>GGA — Generalized Gradient Approximation</h3>
+  <p>GGA thêm thông tin về <em>độ biến thiên</em> của mật độ qua gradient $\nabla\rho$:</p>
+  <div class="math-box">
+    <div class="eq-label">GGA tổng quát</div>
+    $$E_{xc}^{GGA}[\rho] = \int \rho(\mathbf{r}) \varepsilon_{xc}\left[\rho(\mathbf{r}), \nabla\rho(\mathbf{r})\right] d\mathbf{r}$$
+  </div>
+
+  <table class="dt">
+    <tr><th>Functional</th><th>Loại</th><th>Ưu điểm</th><th>Nhược điểm</th></tr>
+    <tr><td><code>BLYP</code></td><td>GGA</td><td>Liên kết H tốt, sinh học</td><td>Yếu với liên kết yếu</td></tr>
+    <tr><td><code>PBE</code></td><td>GGA</td><td>Không tham số, vật lý</td><td>Kém cho hóa hữu cơ</td></tr>
+    <tr><td><code>B3LYP</code></td><td>Hybrid</td><td>Tiêu chuẩn vàng hóa hữu cơ</td><td>Kém cho phức kim loại, chậm</td></tr>
+    <tr><td><code>PBE0</code></td><td>Hybrid</td><td>Cân bằng tốt</td><td>Tốn kém hơn GGA</td></tr>
+    <tr><td><code>SCAN</code></td><td>meta-GGA</td><td>Nhanh, thỏa mãn 17 ràng buộc</td><td>Đôi khi không ổn định số</td></tr>
+  </table>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Không có "functional tốt nhất" tuyệt đối</div>
+    <p>Chọn functional phụ thuộc vào hệ và tính chất cần tính. Nguyên tắc: dùng <code>B3LYP/6-31G*</code> cho phân tử hữu cơ nhỏ, <code>PBE/plane-wave</code> cho vật liệu, <code>ωB97X-D3</code> cho phân tử có liên kết yếu.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(5)">← Trước</button>
+    <button class="btn primary" onclick="goTo(7)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 7: Basis Sets -->
+<section class="module" id="mod-7">
+  <span class="mtag tag-medium">Trung cấp — Module 7</span>
+  <h2>Basis Sets — Bộ Hàm Cơ Sở</h2>
+  <p class="subtitle">Biểu diễn orbital phân tử bằng hàm toán học</p>
+
+  <p>Trong thực tế, KS orbital $\phi_i(\mathbf{r})$ được khai triển trên một bộ hàm cơ sở hữu hạn $\{\chi_\mu\}$:</p>
+  <div class="math-box">
+    <div class="eq-label">Khai triển LCAO (Linear Combination of Atomic Orbitals)</div>
+    $$\phi_i(\mathbf{r}) = \sum_{\mu=1}^{K} c_{\mu i} \, \chi_\mu(\mathbf{r})$$
+  </div>
+  <p>Bài toán giải phương trình KS trở thành bài toán đại số ma trận: $\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\boldsymbol{\varepsilon}$, trong đó $\mathbf{F}$ là ma trận Fock KS, $\mathbf{S}$ là ma trận overlap, $\mathbf{C}$ là ma trận hệ số.</p>
+
+  <h3>Slater Type Orbitals (STO) vs. Gaussian Type Orbitals (GTO)</h3>
+  <div class="basis-grid">
+    <div class="basis-card">
+      <div class="bct">⚡ STO — Slater Type Orbitals</div>
+      <div class="bcs">
+        $\chi^{STO} \sim r^{n-1} e^{-\zeta r} Y_l^m(\theta,\phi)$<br><br>
+        ✅ Chính xác gần hạt nhân (đúng cusp condition)<br>
+        ✅ Số hàm cơ sở nhỏ hơn<br>
+        ❌ Tích phân 4-tâm khó tính (không có công thức giải tích)<br>
+        📌 Dùng trong: ADF (Amsterdam)
+      </div>
+    </div>
+    <div class="basis-card recommended">
+      <div class="bct">🏆 GTO — Gaussian Type Orbitals (phổ biến nhất)</div>
+      <div class="bcs">
+        $\chi^{GTO} \sim x^l y^m z^n e^{-\alpha r^2}$<br><br>
+        ✅ Tích phân 4-tâm có công thức giải tích (nhanh!)<br>
+        ✅ Tích Gaussian là Gaussian (tích GTO là GTO)<br>
+        ❌ Kém chính xác gần hạt nhân → dùng nhiều hàm hơn<br>
+        📌 Dùng trong: Gaussian, ORCA, Psi4
+      </div>
+    </div>
+  </div>
+
+  <h3>Ký hiệu Basis Set — Bộ Pople</h3>
+  <p>Basis sets phổ biến nhất trong hóa học hữu cơ là bộ Pople (<code>k-nlmG</code>):</p>
+  <table class="dt">
+    <tr><th>Basis Set</th><th>Kích thước</th><th>Mô tả</th><th>Khi nào dùng</th></tr>
+    <tr><td><code>STO-3G</code></td><td>Tối thiểu</td><td>Mỗi AO = 3 Gaussian. Quá nhỏ.</td><td>Test, học tập</td></tr>
+    <tr><td><code>6-31G</code></td><td>Double-ζ</td><td>Core: 6G, valence: 3+1G</td><td>Sàng lọc sơ bộ</td></tr>
+    <tr><td><code>6-31G*</code></td><td>DZ+polarization</td><td>Thêm orbital d cho C,N,O</td><td>Tối ưu hóa cấu trúc</td></tr>
+    <tr><td><code>6-311G**</code></td><td>Triple-ζ</td><td>Valence chia 3 phần, p trên H</td><td>Tính năng lượng chính xác</td></tr>
+    <tr><td><code>cc-pVTZ</code></td><td>Triple-ζ</td><td>Correlation-consistent Dunning</td><td>Hóa học độ chính xác cao</td></tr>
+    <tr><td><code>def2-TZVP</code></td><td>Triple-ζ</td><td>Ahlrichs, hiệu quả cho kim loại</td><td>Kim loại chuyển tiếp</td></tr>
+  </table>
+
+  <h3>Ký hiệu phân tích: <code>6-31G*</code></h3>
+  <div class="box box-info">
+    <div class="box-title">📖 Đọc ký hiệu basis set</div>
+    <p>
+    <strong>6</strong> = 6 Gaussian cho core orbital<br>
+    <strong>-31</strong> = valence chia làm 2 phần: lớp ngoài (3 Gaussian) + lớp ngoài cùng (1 Gaussian)<br>
+    <strong>G</strong> = Gaussian type<br>
+    <strong>*</strong> = thêm hàm polarization d trên nguyên tử hạng nặng (C, N, O, F...)<br>
+    <strong>**</strong> = thêm cả hàm p trên Hydrogen
+    </p>
+  </div>
+
+  <h3>Plane Wave Basis Sets</h3>
+  <p>Cho vật liệu tinh thể (periodic systems), dùng <span class="hl">plane waves</span> thay vì GTO:</p>
+  <div class="math-box">
+    <div class="eq-label">Khai triển plane wave (Bloch theorem)</div>
+    $$\phi_{i\mathbf{k}}(\mathbf{r}) = \frac{1}{\sqrt{V}} \sum_{\mathbf{G}} c_{i,\mathbf{k}+\mathbf{G}} e^{i(\mathbf{k}+\mathbf{G})\cdot\mathbf{r}}$$
+  </div>
+  <p>Độ chính xác điều khiển bởi <span class="hlg">cutoff energy</span> $E_{cut}$ (eV hoặc Ry). Thường dùng 400–800 eV cho VASP, Quantum ESPRESSO. Cần thêm pseudopotential để mô tả vùng core.</p>
+
+  <div class="box box-tip">
+    <div class="box-title">🎯 Nguyên tắc chọn Basis Set</div>
+    <p>Bắt đầu với basis nhỏ để kiểm tra cấu trúc, rồi tăng dần để kiểm tra hội tụ. Nên benchmark với <code>6-31G*</code> → <code>6-311G**</code> → <code>cc-pVTZ</code>. Nếu kết quả thay đổi ít (&lt;1 kcal/mol), basis set đủ lớn.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(6)">← Trước</button>
+    <button class="btn primary" onclick="goTo(8)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 8: Hybrid & DFT-D3 -->
+<section class="module" id="mod-8">
+  <span class="mtag tag-advanced">Nâng cao — Module 8</span>
+  <h2>Hybrid Functionals & Hiệu chỉnh Dispersion DFT-D3</h2>
+  <p class="subtitle">Vượt qua giới hạn của GGA — từ B3LYP đến HSE06 và ωB97X-D3</p>
+
+  <h3>Hybrid Functionals</h3>
+  <p>Ý tưởng: trộn một phần trao đổi chính xác Hartree-Fock vào GGA/meta-GGA. Xuất phát từ kết nối adiabatic (Becke, 1993):</p>
+  <div class="math-box">
+    <div class="eq-label">Hybrid Exchange-Correlation (dạng tổng quát)</div>
+    $$E_{xc}^{hyb} = a_x E_x^{HF} + (1-a_x) E_x^{GGA} + E_c^{GGA}$$
+  </div>
+
+  <h4>B3LYP — "Tiêu chuẩn vàng" của hóa hữu cơ</h4>
+  <div class="math-box">
+    <div class="eq-label">B3LYP (Becke 3-parameter, Lee-Yang-Parr)</div>
+    $$E_{xc}^{B3LYP} = (1-a_0)E_x^{LSDA} + a_0 E_x^{HF} + a_x \Delta E_x^{B88} + (1-a_c)E_c^{VWN} + a_c E_c^{LYP}$$
+    $$a_0 = 0.20, \quad a_x = 0.72, \quad a_c = 0.81$$
+  </div>
+
+  <p>3 tham số được fit với dữ liệu thực nghiệm. Cực kỳ thành công cho:</p>
+  <ul class="content-list">
+    <li>Năng lượng phản ứng hữu cơ (±2–3 kcal/mol)</li>
+    <li>Tần số dao động (RMSE ~30–50 cm⁻¹)</li>
+    <li>Phổ UV-Vis (khi kết hợp TD-DFT)</li>
+    <li>Hằng số ghép spin NMR</li>
+  </ul>
+
+  <h4>Range-Separated Hybrid — Phân chia tầm ngắn/tầm xa</h4>
+  <p>Vấn đề của global hybrid: dùng cùng một $a_x$ cho tất cả khoảng cách. Với <span class="hlp">range-separated hybrid</span>, toán tử Coulomb $1/r_{12}$ được chia theo tầm:</p>
+  <div class="math-box">
+    <div class="eq-label">Phân chia tầm ngắn / tầm xa</div>
+    $$\frac{1}{r_{12}} = \underbrace{\frac{1-[\alpha + \beta \cdot \text{erf}(\omega r_{12})]}{r_{12}}}_{\text{short-range (GGA)}} + \underbrace{\frac{\alpha + \beta \cdot \text{erf}(\omega r_{12})}{r_{12}}}_{\text{long-range (HF)}}$$
+  </div>
+
+  <table class="dt">
+    <tr><th>Functional</th><th>SR-HF (%)</th><th>LR-HF (%)</th><th>Đặc điểm</th></tr>
+    <tr><td><code>HSE06</code></td><td>25%</td><td>0%</td><td>Screened hybrid — hiệu quả cho vật liệu, band gap</td></tr>
+    <tr><td><code>CAM-B3LYP</code></td><td>19%</td><td>65%</td><td>Tốt cho trạng thái kích thích charge-transfer</td></tr>
+    <tr><td><code>ωB97X-D3</code></td><td>22.2%</td><td>100%</td><td>Kết hợp range-sep + D3, rất cân bằng</td></tr>
+    <tr><td><code>M06-2X</code></td><td>54%</td><td>54%</td><td>Rất tốt cho nhiệt động lực học và kinetics</td></tr>
+  </table>
+
+  <h3>Vấn đề Dispersion — Tương tác van der Waals</h3>
+  <p>DFT tiêu chuẩn <strong>thất bại hoàn toàn</strong> trong mô tả tương tác van der Waals (London dispersion). Nguyên nhân: dispersion là hiệu ứng tương quan tầm xa — $E_{disp} \sim -C_6/R^6$ — mà LDA/GGA không mô tả được.</p>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Hậu quả của thiếu dispersion</div>
+    <p>Stacking $\pi$-$\pi$ (phân tử thơm), tương tác protein-ligand, adsorption trên bề mặt, và cấu trúc tinh thể thường SAI khi không có dispersion correction.</p>
+  </div>
+
+  <h4>DFT-D3 (Grimme, 2010)</h4>
+  <div class="math-box">
+    <div class="eq-label">DFT-D3 dispersion correction</div>
+    $$E_{disp}^{D3} = -s_6 \sum_{A<B} \frac{C_6^{AB}}{R_{AB}^6} f_{damp}(R_{AB}) - s_8 \sum_{A<B} \frac{C_8^{AB}}{R_{AB}^8} f_{damp}(R_{AB})$$
+    $$f_{damp}(R_{AB}) = \frac{1}{1 + 6(R_{AB}/(s_{r,6} R_0^{AB}))^{-\alpha_6}} \quad \text{(damping function)}$$
+  </div>
+
+  <p>$C_6^{AB}$, $C_8^{AB}$ phụ thuộc vào số phối hợp (coordination number), $s_6$, $s_8$ là tham số fit theo functional. Hiệu chỉnh D3 được thêm sau tính toán DFT.</p>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">🔧</div>
+      <div class="cc-t">DFT-D3(BJ)</div>
+      <div class="cc-d">Biến thể phổ biến nhất — Becke-Johnson damping. Dùng mặc định với hầu hết functional. Cài trong ORCA với <code>D3BJ</code>.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🌊</div>
+      <div class="cc-t">DFT-NL (VV10)</div>
+      <div class="cc-d">Nonlocal correlation functional — tính dispersion từ đầu, không cần tham số kinh nghiệm. Chính xác hơn nhưng tốn kém hơn.</div>
+    </div>
+  </div>
+
+  <div class="box box-success">
+    <div class="box-title">✅ Lời khuyên thực tế</div>
+    <p>Mặc định nên dùng <code>D3(BJ)</code> cho tất cả tính toán phân tử — chi phí không đáng kể nhưng độ chính xác tăng rõ rệt. Trong Gaussian: <code>EmpiricalDispersion=GD3BJ</code>. Trong ORCA: <code>D3BJ</code>.</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(7)">← Trước</button>
+    <button class="btn primary" onclick="goTo(9)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 9: TD-DFT & Applications -->
+<section class="module" id="mod-9">
+  <span class="mtag tag-advanced">Nâng cao — Module 9</span>
+  <h2>TD-DFT & Ứng dụng Thực tế</h2>
+  <p class="subtitle">Time-Dependent DFT, phổ UV-Vis, và quy trình tính toán đầy đủ</p>
+
+  <h3>Time-Dependent DFT (TD-DFT)</h3>
+  <p>DFT chuẩn chỉ cho trạng thái cơ bản. Để tính <span class="hl">trạng thái kích thích</span> và phổ UV-Vis, dùng phần mở rộng time-dependent (Runge-Gross theorem, 1984):</p>
+  <div class="math-box">
+    <div class="eq-label">Phương trình TD-DFT (Casida equation)</div>
+    $$\begin{pmatrix} \mathbf{A} & \mathbf{B} \\ \mathbf{B}^* & \mathbf{A}^* \end{pmatrix} \begin{pmatrix} \mathbf{X} \\ \mathbf{Y} \end{pmatrix} = \omega \begin{pmatrix} \mathbf{1} & \mathbf{0} \\ \mathbf{0} & -\mathbf{1} \end{pmatrix} \begin{pmatrix} \mathbf{X} \\ \mathbf{Y} \end{pmatrix}$$
+    $$A_{ia,jb} = \delta_{ij}\delta_{ab}(\varepsilon_a-\varepsilon_i) + (ia|jb) + (ia|f_{xc}|jb)$$
+  </div>
+  <p>$\omega$ là năng lượng kích thích (eV), $(ia|jb)$ là tích phân Coulomb giữa transition pairs, $f_{xc}$ là XC kernel.</p>
+
+  <h4>Ứng dụng TD-DFT</h4>
+  <ul class="content-list">
+    <li><strong>Phổ UV-Vis:</strong> Tính bước sóng hấp thụ và cường độ (oscillator strength) — so sánh trực tiếp với thực nghiệm</li>
+    <li><strong>Phổ huỳnh quang (emission):</strong> Tối ưu hóa cấu trúc trạng thái kích thích S₁</li>
+    <li><strong>Phân tích NTO (Natural Transition Orbitals):</strong> Hình ảnh hóa quá trình chuyển điện tích</li>
+    <li><strong>Tính năng lượng kích thích triplet:</strong> Quan trọng cho phosphorescence và OLED</li>
+  </ul>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Giới hạn của TD-DFT</div>
+    <p>TD-DFT kém chính xác cho: trạng thái có nhiều electron kích thích đồng thời (multi-reference), charge-transfer từ tầm xa (dùng CAM-B3LYP), Rydberg states. Sai số điển hình: ±0.2–0.5 eV.</p>
+  </div>
+
+  <h3>Phần mềm DFT phổ biến</h3>
+  <table class="dt">
+    <tr><th>Phần mềm</th><th>Loại</th><th>Đặc điểm</th><th>Phù hợp cho</th></tr>
+    <tr><td><strong>Gaussian</strong></td><td>Thương mại</td><td>Đầy đủ nhất, tài liệu tốt</td><td>Phân tử, hóa hữu cơ</td></tr>
+    <tr><td><strong>ORCA</strong></td><td>Miễn phí</td><td>Mạnh về spectroscopy, DFT/ab initio</td><td>Phổ, đa khả năng</td></tr>
+    <tr><td><strong>VASP</strong></td><td>Thương mại</td><td>Plane-wave, hiệu năng cao</td><td>Vật liệu tinh thể</td></tr>
+    <tr><td><strong>Quantum ESPRESSO</strong></td><td>Mã nguồn mở</td><td>Plane-wave, pseudopotential</td><td>Vật liệu, cluster HPC</td></tr>
+    <tr><td><strong>CP2K</strong></td><td>Mã nguồn mở</td><td>Gaussian + plane wave (GPW)</td><td>Vật liệu, MD</td></tr>
+    <tr><td><strong>Psi4</strong></td><td>Mã nguồn mở</td><td>Python API, post-HF mạnh</td><td>Benchmark, giáo dục</td></tr>
+  </table>
+
+  <h3>Quy trình tính toán DFT điển hình</h3>
+  <div class="box box-tip">
+    <div class="box-title">📋 Workflow chuẩn cho phân tử hữu cơ (Gaussian)</div>
+    <p>
+    <strong>Bước 1 — Pre-optimization:</strong> Dùng GFN2-xTB hoặc MM để có cấu trúc ban đầu hợp lý<br><br>
+    <strong>Bước 2 — Geometry optimization:</strong> <code>B3LYP/6-31G* opt</code><br><br>
+    <strong>Bước 3 — Frequency analysis:</strong> <code>B3LYP/6-31G* freq</code> — xác nhận minimum (không có tần số ảo)<br><br>
+    <strong>Bước 4 — Single-point energy:</strong> <code>B3LYP/6-311+G** sp</code> — basis lớn hơn trên cấu trúc đã tối ưu<br><br>
+    <strong>Bước 5 — Properties:</strong> NMR (<code>nmr</code>), phổ UV (<code>td</code>), phân tích điện tích (<code>pop=nbo</code>)
+    </p>
+  </div>
+
+  <h3>Ví dụ ứng dụng thực tế</h3>
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">💊</div>
+      <div class="cc-t">Thiết kế thuốc</div>
+      <div class="cc-d">DFT tính năng lượng liên kết drug-receptor, pKa, logP, và HOMO-LUMO gap để dự đoán hoạt tính sinh học và ADMET.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">☀️</div>
+      <div class="cc-t">Pin mặt trời</div>
+      <div class="cc-d">TD-DFT tính phổ hấp thụ của perovskite ABX₃, dye sensitizer hữu cơ, và HOMO-LUMO alignment tại interface.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">⚡</div>
+      <div class="cc-t">Xúc tác</div>
+      <div class="cc-d">DFT vẽ potential energy surface, tính năng lượng hoạt hóa (TS), xác định cơ chế phản ứng cho xúc tác đồng thể và dị thể.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🔬</div>
+      <div class="cc-t">Phổ NMR</div>
+      <div class="cc-d">Tính độ dịch chuyển hóa học $\delta$ và hằng số ghép $J$ bằng GIAO (Gauge-Including Atomic Orbitals) — xác nhận cấu trúc.</div>
+    </div>
+  </div>
+
+  <h3>Xu hướng hiện đại</h3>
+  <ul class="content-list">
+    <li><span class="hlp">Machine Learning Potentials (MLP):</span> NequIP, MACE, ALIGNN — train neural network trên dữ liệu DFT để đạt tốc độ MD cổ điển với độ chính xác DFT.</li>
+    <li><span class="hl">DFT+U:</span> Thêm Hubbard U cho d/f electron bị tương quan mạnh — quan trọng cho oxide kim loại chuyển tiếp.</li>
+    <li><span class="hlg">GW approximation & BSE:</span> Vượt qua DFT cho band gap và quang phổ chính xác của vật liệu.</li>
+    <li><span class="hlr">TDDFT + Ehrenfest dynamics:</span> Mô phỏng trực tiếp chuyển động electron thời gian thực sau kích thích laser.</li>
+  </ul>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(8)">← Trước</button>
+    <button class="btn primary" onclick="goTo(10)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 10: Key Parameters -->
+<section class="module" id="mod-10">
+  <span class="mtag tag-advanced">Nâng cao — Module 10</span>
+  <h2>Tham số Tính toán DFT Thực tế</h2>
+  <p class="subtitle">Tất cả những gì cần khai báo trước khi chạy một job DFT</p>
+
+  <p>Đây là module thực hành nhất — nắm rõ các tham số này là điều kiện tiên quyết để chạy DFT đúng cách, tránh lãng phí tài nguyên tính toán và sai kết quả.</p>
+
+  <div class="box box-info">
+    <div class="box-title">🗺️ Bản đồ tham số DFT</div>
+    <p>Mỗi job DFT cần xác định: <strong>Hệ vật lý</strong> (charge, spin) → <strong>Phương pháp</strong> (functional, basis set) → <strong>Tác vụ</strong> (opt, freq, sp...) → <strong>Môi trường</strong> (solvation) → <strong>Tài nguyên</strong> (RAM, CPU).</p>
+  </div>
+
+  <h3>1. Charge (Điện tích) &amp; Spin Multiplicity</h3>
+  <p>Đây là hai tham số <span class="hl">bắt buộc đầu tiên</span> và hay bị khai báo sai nhất:</p>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">⚡</div>
+      <div class="cc-t">Charge (q)</div>
+      <div class="cc-d">Điện tích tổng của phân tử. Trung tính = 0, cation = +1, +2... anion = −1, −2...<br><br>Ví dụ: NH₄⁺ → q = +1; OH⁻ → q = −1.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🧲</div>
+      <div class="cc-t">Multiplicity (M = 2S + 1)</div>
+      <div class="cc-d">M = 1 (singlet, mọi e ghép đôi), M = 2 (doublet, 1e lẻ), M = 3 (triplet, 2e lẻ).<br><br>Hầu hết phân tử hữu cơ: M = 1. Radical: M = 2.</div>
+    </div>
+  </div>
+
+  <div class="math-box">
+    <div class="eq-label">Quan hệ charge – electron – multiplicity</div>
+    $$N_{electrons} = \sum_A Z_A - q \qquad M = 2S + 1 = N_{unpaired} + 1$$
+    $$\text{Nếu } N_{electrons} \text{ chẵn} \to M = 1, 3, 5\ldots \quad \text{Nếu lẻ} \to M = 2, 4\ldots$$
+  </div>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Lỗi phổ biến nhất</div>
+    <p>Khai báo sai charge hoặc multiplicity → SCF không hội tụ hoặc cho năng lượng sai hoàn toàn. Luôn kiểm tra: <em>tổng electron = $\sum Z_A - q$</em>, và multiplicity phải cùng tính chẵn/lẻ với số electron.</p>
+  </div>
+
+  <table class="dt">
+    <tr><th>Phân tử / Ion</th><th>Charge</th><th>$N_e$</th><th>Unpaired e</th><th>Multiplicity</th></tr>
+    <tr><td>H₂O</td><td>0</td><td>10</td><td>0</td><td>1 (singlet)</td></tr>
+    <tr><td>OH• (radical)</td><td>0</td><td>9</td><td>1</td><td>2 (doublet)</td></tr>
+    <tr><td>O₂ (triplet ground state)</td><td>0</td><td>16</td><td>2</td><td>3 (triplet)</td></tr>
+    <tr><td>NO⁺</td><td>+1</td><td>13</td><td>1</td><td>2 (doublet) ← chú ý!</td></tr>
+    <tr><td>Fe²⁺ (high spin, d⁶)</td><td>+2</td><td>22</td><td>4</td><td>5 (quintet)</td></tr>
+  </table>
+
+  <h3>2. Functional &amp; Basis Set</h3>
+  <p>Kết hợp functional/basis set quyết định độ chính xác và chi phí. Không có lựa chọn tối ưu cho mọi trường hợp:</p>
+
+  <table class="dt">
+    <tr><th>Hệ / Bài toán</th><th>Functional khuyên dùng</th><th>Basis Set khuyên dùng</th><th>Ghi chú</th></tr>
+    <tr><td>Phân tử hữu cơ nhỏ (cấu trúc)</td><td><code>B3LYP-D3(BJ)</code></td><td><code>6-31G*</code></td><td>Nhanh, đủ chính xác</td></tr>
+    <tr><td>Phân tử hữu cơ (năng lượng cao)</td><td><code>ωB97X-D3</code></td><td><code>6-311+G**</code></td><td>Benchmark chất lượng</td></tr>
+    <tr><td>Phức kim loại chuyển tiếp</td><td><code>TPSSh</code> hoặc <code>M06-L</code></td><td><code>def2-TZVP</code> (kim loại) + <code>6-31G*</code> (ligand)</td><td>GGA cho kim loại thường tốt hơn B3LYP</td></tr>
+    <tr><td>Phổ UV-Vis (TD-DFT)</td><td><code>CAM-B3LYP</code> hoặc <code>ωB97X-D3</code></td><td><code>6-311+G*</code></td><td>Range-separated cho CT states</td></tr>
+    <tr><td>Vật liệu tinh thể (VASP)</td><td><code>PBE</code> hoặc <code>PBEsol</code></td><td>PAW + <code>ENCUT=520 eV</code></td><td>GGA đủ cho cấu trúc; HSE06 cho band gap</td></tr>
+    <tr><td>Liên kết yếu, stacking π</td><td><code>B3LYP-D3(BJ)</code> hoặc <code>PBE-D3</code></td><td><code>def2-TZVP</code></td><td>Bắt buộc dùng dispersion</td></tr>
+    <tr><td>NMR chemical shifts</td><td><code>mPW1PW91</code> hoặc <code>PBE0</code></td><td><code>6-311+G(2d,p)</code> hoặc <code>pcSseg-2</code></td><td>Dùng basis set tối ưu cho NMR</td></tr>
+  </table>
+
+  <h3>3. Task Keywords — Tác vụ tính toán</h3>
+  <p>Mỗi loại tính toán cần keyword riêng. Trong Gaussian:</p>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">🔧</div>
+      <div class="cc-t"><code>opt</code> — Geometry Optimization</div>
+      <div class="cc-d">Tối ưu hóa cấu trúc phân tử về minimum energy. Dùng <code>opt=tight</code> cho độ chính xác cao. Luôn kiểm tra không có tần số ảo sau khi opt.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🔊</div>
+      <div class="cc-t"><code>freq</code> — Frequency Analysis</div>
+      <div class="cc-d">Tính tần số dao động, entropy nhiệt động (G, H, S), zero-point energy. Bắt buộc làm sau opt. Tần số ảo (imaginary) nghĩa là cấu trúc chưa hội tụ đúng.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">📊</div>
+      <div class="cc-t"><code>sp</code> — Single Point Energy</div>
+      <div class="cc-d">Tính năng lượng tại cấu trúc cố định. Dùng để tính năng lượng chính xác hơn trên cấu trúc đã opt với basis nhỏ hơn.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">☀️</div>
+      <div class="cc-t"><code>td</code> — Time-Dependent DFT</div>
+      <div class="cc-d">Tính trạng thái kích thích, phổ UV-Vis. Dùng <code>td=(nstates=10)</code>. Kết hợp với <code>CAM-B3LYP</code> cho charge-transfer.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🗺️</div>
+      <div class="cc-t"><code>scan</code> — Potential Energy Scan</div>
+      <div class="cc-d">Quét năng lượng theo một tọa độ (bond, angle, dihedral). Dùng để tìm trạng thái chuyển tiếp ban đầu.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">⚡</div>
+      <div class="cc-t"><code>irc</code> — Intrinsic Reaction Coordinate</div>
+      <div class="cc-d">Theo dấu phản ứng từ TS về reactant và product. Xác nhận TS đúng kết nối đúng hai phía.</div>
+    </div>
+  </div>
+
+  <h3>4. SCF Convergence — Tiêu chuẩn hội tụ</h3>
+  <div class="math-box">
+    <div class="eq-label">Tiêu chuẩn hội tụ SCF (Gaussian defaults)</div>
+    $$\Delta E_{SCF} &lt; 10^{-8} \text{ Hartree (default)} \quad \Rightarrow \quad 10^{-10} \text{ Ha (Tight)}$$
+    $$\Delta\rho_{RMS} &lt; 10^{-6} \text{ (default)} \quad \Rightarrow \quad 10^{-8} \text{ (Tight)}$$
+  </div>
+
+  <table class="dt">
+    <tr><th>Tham số</th><th>Gaussian keyword</th><th>ORCA keyword</th><th>Khi nào dùng</th></tr>
+    <tr><td>SCF Default</td><td><code>SCF=Tight</code></td><td><code>TightSCF</code></td><td>Mặc định cho hầu hết tính toán</td></tr>
+    <tr><td>SCF Chặt hơn</td><td><code>SCF=VeryTight</code></td><td><code>VeryTightSCF</code></td><td>Tính NMR, freq, gradient chính xác</td></tr>
+    <tr><td>Geom. Opt Default</td><td><code>opt</code></td><td><code>Opt</code></td><td>Thông thường</td></tr>
+    <tr><td>Geom. Opt Chặt</td><td><code>opt=tight</code></td><td><code>TightOpt</code></td><td>Trước khi tính freq, NMR</td></tr>
+  </table>
+
+  <h3>5. Integration Grid — Lưới tích phân số</h3>
+  <p>$E_{xc}[\rho]$ được tính bằng tích phân số trên lưới 3D. Lưới thô → sai số tích phân, đặc biệt với meta-GGA và gradient nhỏ:</p>
+
+  <table class="dt">
+    <tr><th>Grid</th><th>Gaussian</th><th>ORCA</th><th>Điểm lưới (điển hình)</th><th>Khi dùng</th></tr>
+    <tr><td>Coarse</td><td><code>Grid=SG1</code></td><td><code>Grid1</code></td><td>~1,000/nguyên tử</td><td>Sàng lọc nhanh</td></tr>
+    <tr><td>Default (Fine)</td><td><code>Int=FineGrid</code></td><td><code>Grid4</code></td><td>~50,000/nguyên tử</td><td>Hầu hết GGA</td></tr>
+    <tr><td>UltraFine</td><td><code>Int=UltraFine</code></td><td><code>Grid5</code></td><td>~200,000/nguyên tử</td><td><strong>Bắt buộc</strong> cho meta-GGA (M06, TPSS, SCAN) và freq</td></tr>
+    <tr><td>SuperFine</td><td><code>Int=SuperFine</code></td><td><code>Grid6</code></td><td>~500,000/nguyên tử</td><td>Benchmark chính xác cao</td></tr>
+  </table>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Quan trọng với meta-GGA</div>
+    <p>Khi dùng M06, M06-2X, TPSS, SCAN, r²SCAN: <strong>bắt buộc dùng <code>Int=UltraFine</code></strong> (Gaussian) hoặc <code>Grid5</code> (ORCA). Lưới mặc định sẽ cho tần số ảo giả hoặc gradient sai.</p>
+  </div>
+
+  <h3>6. Solvation Model — Mô hình dung môi</h3>
+  <p>Phân tử trong thực nghiệm thường ở trong dung môi, không phải chân không (<em>gas phase</em>). Hai mô hình phổ biến:</p>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">🌊</div>
+      <div class="cc-t">PCM / IEFPCM</div>
+      <div class="cc-d">Polarizable Continuum Model. Bọc phân tử trong cavity điện môi liên tục $\varepsilon_r$. Nhanh, đủ cho năng lượng solvation đơn giản.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🧪</div>
+      <div class="cc-t">SMD (Marenich–Truhlar)</div>
+      <div class="cc-d">Thêm non-electrostatic terms (cavity, dispersion, repulsion). Chính xác hơn cho pKa, logP, tự do solvation. Khuyên dùng mặc định.</div>
+    </div>
+  </div>
+
+  <table class="dt">
+    <tr><th>Dung môi</th><th>$\varepsilon_r$</th><th>Gaussian keyword</th><th>ORCA keyword</th></tr>
+    <tr><td>Nước (water)</td><td>78.4</td><td><code>SCRF=(SMD,Solvent=Water)</code></td><td><code>CPCM(Water)</code></td></tr>
+    <tr><td>DMSO</td><td>46.7</td><td><code>SCRF=(SMD,Solvent=DMSO)</code></td><td><code>CPCM(DMSO)</code></td></tr>
+    <tr><td>THF</td><td>7.43</td><td><code>SCRF=(SMD,Solvent=THF)</code></td><td><code>CPCM(THF)</code></td></tr>
+    <tr><td>Hexane</td><td>1.88</td><td><code>SCRF=(SMD,Solvent=Hexane)</code></td><td><code>CPCM(Hexane)</code></td></tr>
+  </table>
+
+  <h3>7. Tài nguyên tính toán (RAM &amp; CPU)</h3>
+  <div class="box box-tip">
+    <div class="box-title">💻 Gaussian: khai báo đầu file .gjf</div>
+    <p>
+    <code>%chk=myjob.chk</code> &nbsp;← Lưu checkpoint (để restart nếu crash)<br>
+    <code>%mem=16GB</code> &nbsp;← RAM cấp phát (thường 75–80% RAM máy)<br>
+    <code>%nprocshared=8</code> &nbsp;← Số CPU cores (nên để bội số 4)
+    </p>
+  </div>
+
+  <div class="box box-tip">
+    <div class="box-title">💻 ORCA: trong file .inp</div>
+    <p>
+    <code>%maxcore 4000</code> &nbsp;← RAM per core, MB (tổng = maxcore × nprocs)<br>
+    <code>%pal nprocs 8 end</code> &nbsp;← Số CPU cores (cần OpenMPI)
+    </p>
+  </div>
+
+  <h3>8. Ví dụ Input File đầy đủ</h3>
+
+  <h4>Gaussian — Tối ưu hóa &amp; Tính tần số phân tử caffeine</h4>
+  <pre style="font-size:12px; line-height:1.7;">%chk=caffeine.chk
+%mem=8GB
+%nprocshared=4
+
+# B3LYP/6-31G* opt=(tight,maxcycles=100) freq
+  EmpiricalDispersion=GD3BJ
+  Int=UltraFine
+  SCRF=(SMD,Solvent=Water)
+
+Caffeine geometry optimization and frequency (B3LYP-D3BJ/6-31G*)
+
+0 1         <span style="color:var(--text-dim);">&lt;-- charge=0 (neutral), multiplicity=1 (singlet)</span>
+C   1.234   0.567   0.000
+N  -0.123   0.456   0.000
+... (tọa độ XYZ của tất cả nguyên tử)</pre>
+
+  <h4>ORCA — Single point energy chính xác với ωB97X-D3</h4>
+  <pre style="font-size:12px; line-height:1.7;">! wB97X-D3 def2-TZVP TightSCF TightOpt Grid5
+! CPCM(Water)
+
+%maxcore 4000
+%pal nprocs 8 end
+
+* xyz 0 1       <span style="color:var(--text-dim);">&lt;-- charge=0, multiplicity=1</span>
+C   1.234   0.567   0.000
+N  -0.123   0.456   0.000
+...
+*</pre>
+
+  <h3>9. Tham số VASP cho Vật liệu (INCAR)</h3>
+  <p>Với tính toán vật liệu tinh thể bằng VASP, file <code>INCAR</code> chứa các tham số chính:</p>
+
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--gold-light);"># --- Cơ bản ---</span>
+SYSTEM = TiO2 rutile optimization
+ISTART = 0          <span style="color:var(--text-dim);"># 0=fresh start, 1=continue từ WAVECAR</span>
+ICHARG = 2          <span style="color:var(--text-dim);"># khởi tạo charge density từ superposition</span>
+PREC   = Accurate   <span style="color:var(--text-dim);"># Normal/Accurate/High</span>
+ENCUT  = 520        <span style="color:var(--text-dim);"># Plane-wave cutoff (eV), 1.3×ENMAX trong POTCAR</span>
+
+<span style="color:var(--gold-light);"># --- Functional ---</span>
+GGA    = PE         <span style="color:var(--text-dim);"># PBE functional</span>
+IVDW   = 12         <span style="color:var(--text-dim);"># DFT-D3(BJ) dispersion correction</span>
+
+<span style="color:var(--gold-light);"># --- SCF convergence ---</span>
+EDIFF  = 1E-6       <span style="color:var(--text-dim);"># SCF energy convergence (eV)</span>
+NELM   = 200        <span style="color:var(--text-dim);"># max SCF iterations</span>
+ALGO   = Fast       <span style="color:var(--text-dim);"># RMM-DIIS algorithm</span>
+
+<span style="color:var(--gold-light);"># --- Geometry optimization ---</span>
+IBRION = 2          <span style="color:var(--text-dim);"># 2=conjugate gradient, -1=no relaxation</span>
+NSW    = 100        <span style="color:var(--text-dim);"># max ionic steps</span>
+EDIFFG = -0.02      <span style="color:var(--text-dim);"># force convergence (eV/Å), âm = theo lực</span>
+ISIF   = 3          <span style="color:var(--text-dim);"># relax cả ions lẫn cell shape và volume</span>
+
+<span style="color:var(--gold-light);"># --- Smearing (cho kim loại) ---</span>
+ISMEAR = 1          <span style="color:var(--text-dim);"># 1=Methfessel-Paxton (kim loại), 0=Gaussian, -5=tetrahedron (insulator)</span>
+SIGMA  = 0.2        <span style="color:var(--text-dim);"># smearing width (eV)</span>
+
+<span style="color:var(--gold-light);"># --- Output ---</span>
+LORBIT = 11         <span style="color:var(--text-dim);"># projected DOS (DOSCAR + PROCAR)</span>
+LWAVE  = .TRUE.     <span style="color:var(--text-dim);"># lưu WAVECAR để restart</span></pre>
+
+  <h4>KPOINTS — Lưới k-point Monkhorst-Pack</h4>
+  <pre style="font-size:12px; line-height:1.7;">Automatic k-mesh
+0
+Monkhorst-Pack
+4 4 4           <span style="color:var(--text-dim);"># 4×4×4 = 64 k-points (tăng cho chính xác hơn)</span>
+0 0 0           <span style="color:var(--text-dim);"># shift = 0 (không shift)</span></pre>
+
+  <div class="box box-info">
+    <div class="box-title">📐 Chọn ENCUT và k-mesh như thế nào?</div>
+    <p><strong>ENCUT:</strong> Bắt đầu với <code>ENCUT = 1.3 × max(ENMAX)</code> trong POTCAR. Test convergence: tăng ENCUT 50 eV cho đến khi năng lượng thay đổi &lt; 1 meV/atom.<br><br>
+    <strong>k-mesh:</strong> Dùng nguyên tắc Monkhorst-Pack. Kim loại: 10–16 k/Å⁻¹ dọc mỗi chiều nghịch đảo. Insulator/semiconductor: 5–8 k/Å⁻¹. Test bằng cách tăng mesh đến khi năng lượng hội tụ &lt; 1 meV/atom.</p>
+  </div>
+
+  <h3>10. Checklist trước khi submit job</h3>
+
+  <div class="box box-success">
+    <div class="box-title">✅ Checklist 10 điểm</div>
+    <p>
+    ☐ <strong>Charge đúng?</strong> Đếm lại điện tích tổng của phân tử/ion<br>
+    ☐ <strong>Multiplicity hợp lệ?</strong> Kiểm tra tính chẵn/lẻ với số electron<br>
+    ☐ <strong>Functional phù hợp?</strong> Có dùng dispersion correction không?<br>
+    ☐ <strong>Basis set đủ lớn?</strong> Có hàm diffuse (+) nếu cần tính anion/excited state?<br>
+    ☐ <strong>Grid đủ mịn?</strong> Dùng UltraFine nếu dùng meta-GGA<br>
+    ☐ <strong>Dung môi đúng?</strong> Phù hợp với điều kiện thực nghiệm<br>
+    ☐ <strong>Cấu trúc hợp lý?</strong> Kiểm tra bond length, angle bằng GaussView/Avogadro<br>
+    ☐ <strong>SCF convergence đủ chặt?</strong> Dùng Tight trước Freq/NMR<br>
+    ☐ <strong>%mem và %nproc phù hợp?</strong> Không quá 80% RAM của node<br>
+    ☐ <strong>Có lưu checkpoint?</strong> %chk=... để có thể restart nếu job bị kill
+    </p>
+  </div>
+
+  <h3>11. Key Concepts tóm tắt toàn bộ</h3>
+
+  <table class="dt">
+    <tr><th>Khái niệm</th><th>Ý nghĩa</th><th>Liên quan tới</th></tr>
+    <tr><td><strong>$\rho(\mathbf{r})$</strong></td><td>Mật độ electron — "DNA" của hệ lượng tử</td><td>HK theorem, KS equation</td></tr>
+    <tr><td><strong>$E_{xc}[\rho]$</strong></td><td>Functional trao đổi-tương quan — phần chưa biết chính xác</td><td>LDA, GGA, hybrid</td></tr>
+    <tr><td><strong>$v_s(\mathbf{r})$</strong></td><td>Thế năng hiệu dụng KS = $v_{ext}+v_H+v_{xc}$</td><td>KS equation</td></tr>
+    <tr><td><strong>SCF</strong></td><td>Chu trình lặp đến hội tụ mật độ/năng lượng</td><td>Convergence thresholds</td></tr>
+    <tr><td><strong>Charge / Multiplicity</strong></td><td>Điện tích tổng và số electron lẻ</td><td>Input đầu tiên cần khai báo</td></tr>
+    <tr><td><strong>Basis set</strong></td><td>Bộ hàm toán học để khai triển KS orbital</td><td>6-31G*, def2-TZVP, plane-wave</td></tr>
+    <tr><td><strong>Integration grid</strong></td><td>Lưới điểm để tích phân số $E_{xc}$</td><td>FineGrid, UltraFine</td></tr>
+    <tr><td><strong>ENCUT</strong></td><td>Năng lượng cutoff plane-wave (VASP)</td><td>Độ chính xác periodic DFT</td></tr>
+    <tr><td><strong>k-points</strong></td><td>Lấy mẫu không gian k (Brillouin zone)</td><td>Tính chất vật liệu tinh thể</td></tr>
+    <tr><td><strong>Smearing (ISMEAR)</strong></td><td>Làm mềm cạnh Fermi — tránh không hội tụ với kim loại</td><td>VASP/QE cho conductor</td></tr>
+    <tr><td><strong>Dispersion (D3)</strong></td><td>Hiệu chỉnh tương tác van der Waals bị bỏ sót</td><td>GGA, hybrid + D3BJ</td></tr>
+    <tr><td><strong>Solvation (SMD)</strong></td><td>Mô hình dung môi ẩn — ảnh hưởng đến năng lượng và cấu trúc</td><td>pKa, logP, phản ứng trong dd</td></tr>
+    <tr><td><strong>EDIFFG &lt; 0</strong></td><td>Hội tụ theo lực (eV/Å) thay vì năng lượng — ổn định hơn</td><td>VASP geometry opt</td></tr>
+  </table>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(9)">← Trước</button>
+    <button class="btn primary" onclick="goTo(11)">Tiếp theo →</button>
+  </div>
+</section>
+
+<!-- MODULE 11: ORCA Tutorial -->
+<section class="module" id="mod-11">
+  <span class="mtag tag-advanced">Nâng cao — Module 11</span>
+  <h2>Hướng dẫn Sử dụng ORCA</h2>
+  <p class="subtitle">Từ cài đặt đến phân tích kết quả — workflow thực tế đầy đủ</p>
+
+  <p><span class="hl">ORCA</span> là phần mềm hóa học lượng tử <strong>miễn phí</strong> (cho học thuật), mạnh mẽ và linh hoạt. Nó hỗ trợ DFT, post-HF (CCSD(T)), TD-DFT, NMR, EPR, và nhiều phương pháp khác. Được phát triển bởi nhóm Frank Neese tại MPI Mülheim.</p>
+
+  <div class="cg">
+    <div class="cc"><div class="cc-ico">🆓</div><div class="cc-t">Miễn phí học thuật</div><div class="cc-d">Đăng ký tại orcaforum.kofo.mpg.de, tải binary cho Windows/Linux/macOS. Không cần compile từ source.</div></div>
+    <div class="cc"><div class="cc-ico">⚡</div><div class="cc-t">Hiệu năng cao</div><div class="cc-d">Tích hợp sẵn OpenMPI để chạy song song. Hỗ trợ RIJCOSX, COSX để tăng tốc hybrid functional.</div></div>
+    <div class="cc"><div class="cc-ico">📊</div><div class="cc-t">Spectroscopy mạnh</div><div class="cc-d">IR, Raman, UV-Vis (TD-DFT), NMR, EPR, Mössbauer, MCD — tốt nhất trong các phần mềm miễn phí.</div></div>
+    <div class="cc"><div class="cc-ico">🐍</div><div class="cc-t">Tích hợp tốt</div><div class="cc-d">Kết hợp dễ dàng với xtb (GFN2), CREST (conformer search), và phân tích bằng Python (cclib, orca_parser).</div></div>
+  </div>
+
+  <h3>1. Cài đặt ORCA</h3>
+
+  <h4>Bước 1: Tải ORCA</h4>
+  <div class="box box-info">
+    <div class="box-title">🔗 Nguồn tải chính thức</div>
+    <p>Vào <strong>orcaforum.kofo.mpg.de</strong> → Register → Download. Chọn đúng phiên bản cho hệ điều hành (Windows x86-64, Linux x86-64, macOS). Hiện tại: ORCA 6.0.x (2024).</p>
+  </div>
+
+  <h4>Bước 2: Cài OpenMPI (bắt buộc cho chạy song song)</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--gold-light);"># Linux (Ubuntu/Debian)</span>
+sudo apt install libopenmpi-dev openmpi-bin
+
+<span style="color:var(--gold-light);"># macOS (Homebrew)</span>
+brew install open-mpi
+
+<span style="color:var(--gold-light);"># Windows</span>
+Tải Microsoft MPI (MS-MPI) từ Microsoft hoặc dùng WSL2 + Linux steps trên</pre>
+
+  <h4>Bước 3: Cấu hình PATH</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--gold-light);"># Thêm vào ~/.bashrc hoặc ~/.zshrc</span>
+export PATH=/opt/orca:$PATH
+export LD_LIBRARY_PATH=/opt/orca:$LD_LIBRARY_PATH
+
+<span style="color:var(--gold-light);"># Kiểm tra cài đặt</span>
+orca --version
+<span style="color:var(--green);"># → ORCA version 6.0.0, revision 0</span></pre>
+
+  <h4>Bước 4: Chạy ORCA</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--gold-light);"># Chạy cơ bản (1 core)</span>
+orca myjob.inp &gt; myjob.out
+
+<span style="color:var(--gold-light);"># Chạy song song (BẮT BUỘC dùng đường dẫn đầy đủ với MPI)</span>
+/opt/orca/orca myjob.inp &gt; myjob.out
+
+<span style="color:var(--gold-light);"># Chạy nền (background) trên Linux</span>
+nohup /opt/orca/orca myjob.inp &gt; myjob.out 2&gt;&amp;1 &amp;</pre>
+
+  <div class="box box-warn">
+    <div class="box-title">⚠️ Lưu ý quan trọng khi chạy song song</div>
+    <p>Khi dùng <code>%pal nprocs N end</code> (N &gt; 1), <strong>bắt buộc</strong> gọi ORCA bằng <strong>đường dẫn tuyệt đối</strong> (<code>/opt/orca/orca</code>), không phải chỉ <code>orca</code>. ORCA tự gọi <code>mpirun</code> nội bộ — không gọi <code>mpirun orca ...</code> thủ công.</p>
+  </div>
+
+  <h3>2. Cấu trúc File Input ORCA</h3>
+  <p>File input ORCA (<code>.inp</code>) có cấu trúc rõ ràng, dễ đọc:</p>
+
+  <pre style="font-size:12px; line-height:1.8;"><span style="color:var(--blue);"># ─── PHẦN 1: Simple Input Line (bắt đầu bằng !) ───────────────────</span>
+! <span style="color:var(--gold-light);">B3LYP D3BJ def2-TZVP</span> <span style="color:var(--green);">TightSCF TightOpt</span> <span style="color:var(--purple);">Opt Freq</span>
+<span style="color:var(--text-dim);">#  └─ functional ──┘ └─ basis ──┘ └── convergence ──┘ └─ tasks ─┘</span>
+
+<span style="color:var(--blue);"># ─── PHẦN 2: Block Keywords (bắt đầu bằng %) ──────────────────────</span>
+%maxcore 4000          <span style="color:var(--text-dim);"># RAM per core (MB)</span>
+%pal nprocs 8 end      <span style="color:var(--text-dim);"># số CPU cores</span>
+
+%scf
+  MaxIter 500          <span style="color:var(--text-dim);"># max SCF iterations</span>
+  DIISMaxEq 15         <span style="color:var(--text-dim);"># DIIS vectors</span>
+end
+
+%geom
+  MaxIter 200          <span style="color:var(--text-dim);"># max geometry steps</span>
+  Convergence tight    <span style="color:var(--text-dim);"># convergence criteria</span>
+end
+
+%cpcm                  <span style="color:var(--text-dim);"># solvation model</span>
+  smd true
+  SMDSolvent "water"
+end
+
+<span style="color:var(--blue);"># ─── PHẦN 3: Coordinate Block ──────────────────────────────────────</span>
+* xyz <span style="color:var(--gold-light);">0 1</span>             <span style="color:var(--text-dim);"># charge=0, multiplicity=1</span>
+C    0.000   0.000   0.000
+H    0.629   0.629   0.629
+H   -0.629  -0.629   0.629
+H   -0.629   0.629  -0.629
+H    0.629  -0.629  -0.629
+*</pre>
+
+  <h3>3. Các Simple Keywords phổ biến</h3>
+
+  <table class="dt">
+    <tr><th>Loại</th><th>Keyword</th><th>Ý nghĩa</th></tr>
+    <tr><td rowspan="5"><strong>Functional</strong></td><td><code>B3LYP</code></td><td>Hybrid GGA cổ điển, tốt cho hữu cơ</td></tr>
+    <tr><td><code>PBE0</code></td><td>Hybrid GGA không tham số, cân bằng tốt</td></tr>
+    <tr><td><code>wB97X-D3</code></td><td>Range-separated hybrid + D3, khuyên dùng chung</td></tr>
+    <tr><td><code>TPSS</code></td><td>meta-GGA, tốt cho kim loại chuyển tiếp</td></tr>
+    <tr><td><code>r2SCAN-3c</code></td><td>Composite method nhanh, độ chính xác cao</td></tr>
+    <tr><td rowspan="4"><strong>Basis Set</strong></td><td><code>def2-SVP</code></td><td>Double-ζ (nhanh, sàng lọc)</td></tr>
+    <tr><td><code>def2-TZVP</code></td><td>Triple-ζ (chuẩn, khuyên dùng)</td></tr>
+    <tr><td><code>def2-TZVPP</code></td><td>Triple-ζ + polarization (chính xác hơn)</td></tr>
+    <tr><td><code>def2-QZVPP</code></td><td>Quadruple-ζ (benchmark)</td></tr>
+    <tr><td rowspan="3"><strong>Dispersion</strong></td><td><code>D3BJ</code></td><td>DFT-D3 với Becke-Johnson damping (khuyên dùng)</td></tr>
+    <tr><td><code>D3Zero</code></td><td>DFT-D3 với zero damping</td></tr>
+    <tr><td><code>D4</code></td><td>DFT-D4 (mới hơn, chính xác hơn)</td></tr>
+    <tr><td rowspan="3"><strong>Convergence</strong></td><td><code>NormalSCF</code></td><td>Mặc định (1e-6 Ha)</td></tr>
+    <tr><td><code>TightSCF</code></td><td>Chặt hơn (1e-8 Ha) — khuyên dùng</td></tr>
+    <tr><td><code>VeryTightSCF</code></td><td>Rất chặt — cho benchmark</td></tr>
+    <tr><td rowspan="3"><strong>Grid</strong></td><td><code>Grid4</code></td><td>Mặc định (đủ cho GGA)</td></tr>
+    <tr><td><code>Grid5</code></td><td>Chặt hơn — dùng với meta-GGA, Freq</td></tr>
+    <tr><td><code>Grid6</code></td><td>Rất chặt — benchmark</td></tr>
+    <tr><td rowspan="4"><strong>RI Approximation</strong></td><td><code>RI-J</code></td><td>Tăng tốc Coulomb integrals (dùng với pure DFT)</td></tr>
+    <tr><td><code>RIJCOSX</code></td><td>Tăng tốc exchange (dùng với hybrid, rất quan trọng!)</td></tr>
+    <tr><td><code>def2/J</code></td><td>Auxiliary basis cho RI-J</td></tr>
+    <tr><td><code>def2/JK</code></td><td>Auxiliary basis cho RIJCOSX</td></tr>
+  </table>
+
+  <div class="box box-tip">
+    <div class="box-title">🚀 Mẹo tăng tốc ORCA với Hybrid Functional</div>
+    <p>Khi dùng B3LYP, PBE0 (hybrid), thêm <code>RIJCOSX def2/JK</code> vào simple input line → tăng tốc 5–10× với sai số không đáng kể:<br><br>
+    <code>! B3LYP D3BJ def2-TZVP RIJCOSX def2/JK TightSCF</code></p>
+  </div>
+
+  <h3>4. Ví dụ Đầy đủ theo Từng Loại Tính toán</h3>
+
+  <h4>4.1 — Geometry Optimization + Frequency</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Tối ưu cấu trúc ethanol và xác nhận minimum (không có freq ảo)</span>
+! B3LYP D3BJ def2-TZVP RIJCOSX def2/JK TightSCF TightOpt Grid5 Opt Freq
+
+%maxcore 4000
+%pal nprocs 4 end
+
+%geom
+  Convergence Tight     <span style="color:var(--text-dim);"># MaxForce &lt; 1e-4, RMSForce &lt; 3e-5</span>
+  MaxIter 200
+end
+
+%freq
+  Temp 298.15           <span style="color:var(--text-dim);"># Nhiệt độ để tính G, H, S (K)</span>
+  Pressure 1.0          <span style="color:var(--text-dim);"># Áp suất (atm)</span>
+end
+
+* xyz 0 1
+C  -1.252   0.431   0.000
+C   0.054  -0.321   0.000
+O   1.134   0.607   0.000
+H  -1.253   1.097   0.883
+H  -1.253   1.097  -0.883
+H  -2.124  -0.241   0.000
+H   0.088  -0.975   0.883
+H   0.088  -0.975  -0.883
+H   1.978   0.105   0.000
+*</pre>
+
+  <h4>4.2 — Single Point Energy (SP) chính xác hơn</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># SP năng lượng trên cấu trúc đã opt, dùng basis lớn hơn</span>
+! wB97X-D3 def2-QZVPP RIJCOSX def2/JK VeryTightSCF Grid6
+
+%maxcore 8000
+%pal nprocs 8 end
+
+<span style="color:var(--text-dim);"># Đọc tọa độ từ file XYZ (kết quả opt trước đó)</span>
+* xyzfile 0 1 ethanol_opt.xyz</pre>
+
+  <h4>4.3 — TD-DFT: Phổ UV-Vis</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Tính 10 trạng thái kích thích singlet của azobenzene</span>
+! CAM-B3LYP D3BJ def2-TZVP RIJCOSX def2/JK TightSCF
+
+%maxcore 4000
+%pal nprocs 4 end
+
+%tddft
+  NRoots    10          <span style="color:var(--text-dim);"># số trạng thái kích thích cần tính</span>
+  MaxDim    100         <span style="color:var(--text-dim);"># Davidson subspace dimension</span>
+  TDA       false       <span style="color:var(--text-dim);"># false = full TDDFT, true = TDA (nhanh hơn)</span>
+  DoNTO     true        <span style="color:var(--text-dim);"># xuất Natural Transition Orbitals</span>
+  NTOThresh 0.01        <span style="color:var(--text-dim);"># ngưỡng NTO</span>
+end
+
+%cpcm
+  smd true
+  SMDSolvent "acetonitrile"  <span style="color:var(--text-dim);"># dung môi dùng đo phổ UV-Vis</span>
+end
+
+* xyzfile 0 1 azobenzene_opt.xyz</pre>
+
+  <h4>4.4 — NMR Chemical Shifts</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># ¹H và ¹³C NMR của caffeine trong CDCl3</span>
+! PBE0 D3BJ pcSseg-2 RIJCOSX def2/JK TightSCF NMR
+
+<span style="color:var(--text-dim);"># pcSseg-2 là basis set tối ưu cho NMR</span>
+<span style="color:var(--text-dim);"># Nếu không có pcSseg-2 thì dùng: 6-311+G(2d,p) hoặc def2-TZVP</span>
+
+%maxcore 4000
+%pal nprocs 4 end
+
+%eprnmr
+  Nuclei = all H  {shift}   <span style="color:var(--text-dim);"># tính chemical shift cho tất cả H</span>
+  Nuclei = all C  {shift}   <span style="color:var(--text-dim);"># tính chemical shift cho tất cả C</span>
+  GIAO_1el = GIAO           <span style="color:var(--text-dim);"># GIAO gauge (chuẩn)</span>
+end
+
+%cpcm
+  smd true
+  SMDSolvent "chloroform"
+end
+
+* xyzfile 0 1 caffeine_opt.xyz</pre>
+
+  <h4>4.5 — Phức Kim loại: ORCA với DFT+D3 và TPSS</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Phức [Fe(bpy)3]²⁺ — high spin d⁶, Fe(II), 4 electron lẻ</span>
+! TPSS D3BJ def2-TZVP def2-SVP/C RIJCOSX def2/JK TightSCF Opt
+
+%maxcore 6000
+%pal nprocs 8 end
+
+%scf
+  HFTyp    UHF        <span style="color:var(--text-dim);"># Unrestricted (vì có electron lẻ)</span>
+  MaxIter  500
+  Convergence VeryTight
+end
+
+%basis
+  NewECP Fe "def2-ECP"   <span style="color:var(--text-dim);"># Effective Core Potential cho Fe</span>
+end
+
+* xyz +2 5     <span style="color:var(--text-dim);"># charge=+2, multiplicity=5 (high spin Fe²⁺, 4 unpaired e)</span>
+Fe   0.000   0.000   0.000
+N    2.023   0.000   0.000
+...
+*</pre>
+
+  <h4>4.6 — Năng lượng hoạt hóa &amp; Trạng thái chuyển tiếp</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Tìm TS bằng NEB-TS (Nudged Elastic Band)</span>
+! B3LYP D3BJ def2-SVP TightSCF NEB-TS
+
+%maxcore 4000
+%pal nprocs 8 end
+
+%neb
+  Product "product.xyz"     <span style="color:var(--text-dim);"># file XYZ của sản phẩm</span>
+  NImages 8                 <span style="color:var(--text-dim);"># số images trên pathway</span>
+  Climbing true             <span style="color:var(--text-dim);"># Climbing Image NEB để locate TS</span>
+end
+
+* xyzfile 0 1 reactant.xyz  <span style="color:var(--text-dim);"># file XYZ của chất đầu</span></pre>
+
+  <h3>5. Đọc và Phân tích Output ORCA</h3>
+  <p>File output <code>.out</code> chứa rất nhiều thông tin. Đây là những dòng quan trọng cần tìm:</p>
+
+  <h4>Năng lượng tổng (Total Energy)</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Tìm trong output bằng grep:</span>
+grep "FINAL SINGLE POINT ENERGY" myjob.out
+
+<span style="color:var(--green);"># Kết quả dạng:</span>
+FINAL SINGLE POINT ENERGY        -115.730256847023   <span style="color:var(--text-dim);"># Hartree</span></pre>
+
+  <h4>Geometry Optimization — Kiểm tra hội tụ</h4>
+  <pre style="font-size:12px; line-height:1.7;"><span style="color:var(--text-dim);"># Tìm bảng convergence trong output:</span>
+<span style="color:var(--green);">---------------------------------------------------------------------------
+                         Geometry convergence
+              Item                value         Tolerance   Converged
+       Energy change            -0.0000011       0.0000010     NO
+       RMS gradient              0.0000152       0.0000300    YES
+       MAX gradient              0.0000389       0.0001000    YES
+       RMS step                  0.0000891       0.0006000    YES
+       MAX step                  0.0001954       0.0010000    YES
+---------------------------------------------------------------------------</span>
+
+<span style="color:var(--text-dim);"># Khi tất cả YES → HURRAY! Convergence achieved.</span>
+<span style="color:var(--text-dim);"># Nếu Energy change là NO nhưng các tiêu chí khác YES → thường vẫn OK</span></pre>
+
+  <h4>Tần số dao động (Frequencies)</h4>
+  <pre style="font-size:12px; line-height:1.7;">grep "VIBRATIONAL FREQUENCIES" myjob.out -A 30
+
+<span style="color:var(--green);"># Kết quả:</span>
+VIBRATIONAL FREQUENCIES
+-----------------------
+   0:         0.00 cm**-1   <span style="color:var(--text-dim);"># translational modes (bỏ qua)</span>
+   1:         0.00 cm**-1
+   2:         0.00 cm**-1
+   3:         0.00 cm**-1   <span style="color:var(--text-dim);"># rotational modes (bỏ qua)</span>
+   4:         0.00 cm**-1
+   5:         0.00 cm**-1
+   6:       832.41 cm**-1   <span style="color:var(--green);">← tần số thực, dương = minimum</span>
+   7:      1048.23 cm**-1
+  ...
+<span style="color:var(--red);">   6:      -324.12 cm**-1   ← tần số ảo! Cấu trúc chưa đúng</span></pre>
+
+  <h4>Thermodynamic Summary (sau Freq)</h4>
+  <pre style="font-size:12px; line-height:1.7;">grep -A 20 "THERMOCHEMISTRY AT" myjob.out
+
+<span style="color:var(--green);"># Kết quả quan trọng:</span>
+Total enthalpy                  ...    -115.671234 Eh   <span style="color:var(--text-dim);"># H (298.15K)</span>
+Total entropy                   ...       0.025617 Eh   <span style="color:var(--text-dim);"># T×S</span>
+Final Gibbs free energy         ...    -115.696851 Eh   <span style="color:var(--text-dim);"># G = H - TS</span>
+Zero point energy               ...       0.058012 Eh   <span style="color:var(--text-dim);"># ZPE</span></pre>
+
+  <h4>TD-DFT: Trạng thái kích thích</h4>
+  <pre style="font-size:12px; line-height:1.7;">grep -A 5 "STATE  1" myjob.out
+
+<span style="color:var(--green);"># Kết quả:</span>
+STATE  1:  E=   0.124384 au    3.385 eV   365.9 nm
+           76a ->  77a  :     0.9821 (c= 0.99103)
+<span style="color:var(--text-dim);"># → Trạng thái 1 hấp thụ tại 366 nm, HOMO→LUMO transition (76a→77a)</span>
+
+STATE  2:  E=   0.156021 au    4.246 eV   292.0 nm
+           75a ->  77a  :     0.8934 ...</pre>
+
+  <h4>NMR Chemical Shifts</h4>
+  <pre style="font-size:12px; line-height:1.7;">grep -A 50 "CHEMICAL SHIELDING SUMMARY" myjob.out
+
+<span style="color:var(--green);"># Kết quả thô (cần trừ giá trị reference):</span>
+Nucleus  1H:  sigma =  26.234 ppm   <span style="color:var(--text-dim);"># isotropic shielding</span>
+Nucleus  6C:  sigma = 121.456 ppm
+
+<span style="color:var(--text-dim);"># Tính δ = σ_ref - σ_sample
+# TMS (reference): σ(H)≈31.7 ppm, σ(C)≈183.6 ppm (B3LYP/6-311+G**)
+# δ(H) = 31.7 - 26.234 = 5.47 ppm</span></pre>
+
+  <h3>6. Workflow Thực tế: Từ đầu đến cuối</h3>
+
+  <div class="scf">
+    <div class="scf-node hl-b">① Tiền xử lý: Vẽ cấu trúc bằng Avogadro / GaussView / Molden</div>
+    <div class="scf-arr">↓ Xuất file .xyz</div>
+    <div class="scf-node">② Pre-optimization nhanh bằng GFN2-xTB (xtb)<br><code style="font-size:11px;">xtb molecule.xyz --opt &gt; xtb_opt.out</code></div>
+    <div class="scf-arr">↓ Lấy cấu trúc xtbopt.xyz</div>
+    <div class="scf-node hl-p">③ DFT Opt + Freq: <code style="font-size:11px;">B3LYP-D3BJ/def2-SVP</code> (nhanh, kiểm tra cấu trúc)</div>
+    <div class="scf-arr">↓ Kiểm tra: không có freq ảo?</div>
+    <div class="scf-node">④ DFT Opt + Freq: <code style="font-size:11px;">B3LYP-D3BJ/def2-TZVP</code> (chính xác hơn)</div>
+    <div class="scf-arr">↓ Lấy G, H, ZPE</div>
+    <div class="scf-node hl-y">⑤ Single Point: <code style="font-size:11px;">wB97X-D3/def2-QZVPP</code> (năng lượng chính xác nhất)</div>
+    <div class="scf-arr">↓</div>
+    <div class="scf-node hl-g">⑥ Phân tích: E_total = E_SP + ZPE (hay G từ Freq job)</div>
+  </div>
+
+  <h3>7. Các File Output quan trọng</h3>
+  <table class="dt">
+    <tr><th>File</th><th>Nội dung</th><th>Dùng để</th></tr>
+    <tr><td><code>myjob.out</code></td><td>Toàn bộ output text</td><td>Đọc năng lượng, tần số, phân tích</td></tr>
+    <tr><td><code>myjob.xyz</code></td><td>Cấu trúc tối ưu cuối cùng</td><td>Visualize, input cho job tiếp theo</td></tr>
+    <tr><td><code>myjob.gbw</code></td><td>Wavefunction (binary)</td><td>Restart SCF, tính properties</td></tr>
+    <tr><td><code>myjob_trj.xyz</code></td><td>Trajectory tối ưu</td><td>Xem quá trình optimization</td></tr>
+    <tr><td><code>myjob.hess</code></td><td>Hessian matrix</td><td>Restart freq, tính nhiệt động lực học</td></tr>
+    <tr><td><code>myjob.densities</code></td><td>Electron density (binary)</td><td>Visualize orbital, density với Orca_plot</td></tr>
+    <tr><td><code>myjob.cis</code></td><td>TD-DFT coefficients</td><td>Phân tích trạng thái kích thích, NTO</td></tr>
+    <tr><td><code>myjob.nto.*.molden</code></td><td>Natural Transition Orbitals</td><td>Visualize với Avogadro/Molden</td></tr>
+  </table>
+
+  <h3>8. Lỗi Thường gặp &amp; Cách Xử lý</h3>
+
+  <table class="dt">
+    <tr><th>Thông báo lỗi</th><th>Nguyên nhân</th><th>Cách fix</th></tr>
+    <tr>
+      <td><code>SCF NOT CONVERGED</code></td>
+      <td>SCF không hội tụ sau MaxIter bước</td>
+      <td>Tăng <code>MaxIter 500</code>; dùng <code>SlowConv</code> keyword; thử <code>KDIIS</code> hoặc <code>SOSCF false</code>; kiểm tra lại charge/multiplicity</td>
+    </tr>
+    <tr>
+      <td><code>Imaginary frequency found</code></td>
+      <td>Cấu trúc là saddle point, chưa phải minimum</td>
+      <td>Xem dạng dao động ảo (Avogadro/Molden), dịch chuyển cấu trúc theo hướng đó, opt lại với <code>TightOpt</code></td>
+    </tr>
+    <tr>
+      <td><code>Error: not enough memory</code></td>
+      <td><code>%maxcore</code> quá lớn hoặc quá nhỏ</td>
+      <td>Giảm <code>%maxcore</code> (để 75% RAM/nprocs); kiểm tra RAM máy</td>
+    </tr>
+    <tr>
+      <td><code>ORCA finished abnormally</code></td>
+      <td>Crash đột ngột — nhiều nguyên nhân</td>
+      <td>Xem dòng cuối trước khi crash trong <code>.out</code>; kiểm tra disk space; thử giảm <code>nprocs</code></td>
+    </tr>
+    <tr>
+      <td><code>Basis set not found for element</code></td>
+      <td>Basis set không có cho nguyên tố đó</td>
+      <td>Dùng <code>def2-TZVP</code> cho hầu hết nguyên tố; thêm ECP cho nguyên tố nặng (Au, Hg...)</td>
+    </tr>
+    <tr>
+      <td><code>Geometry optimization did not converge</code></td>
+      <td>Potential energy surface phức tạp</td>
+      <td>Tăng <code>MaxIter 500</code>; thử <code>BFGS</code> thay vì GDIIS; opt với basis nhỏ trước (def2-SVP)</td>
+    </tr>
+    <tr>
+      <td>Kết quả spin contamination cao <code>&lt;S²&gt; &gt; S(S+1)+0.1</code></td>
+      <td>Trạng thái không thuần spin — UHF bị nhiễm</td>
+      <td>Kiểm tra <code>&lt;S²&gt;</code> trong output; thử <code>ROHF</code>; hoặc phương pháp multireference (CASSCF)</td>
+    </tr>
+  </table>
+
+  <h3>9. Tools hỗ trợ đọc/xử lý output ORCA</h3>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="cc-ico">👁️</div>
+      <div class="cc-t">Avogadro 2</div>
+      <div class="cc-d">Phần mềm miễn phí, đọc được <code>.xyz</code>, <code>.out</code>, <code>.molden</code>. Xem cấu trúc, dao động, orbital. Khuyên dùng để visualize.</div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">📈</div>
+      <div class="cc-t">orca_mapspc</div>
+      <div class="cc-d">Tool đi kèm ORCA, xuất phổ UV-Vis dạng CSV:<br><code style="font-size:11px;">orca_mapspc job.out abs -x0 200 -x1 600 -w 0.2</code></div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🐍</div>
+      <div class="cc-t">cclib (Python)</div>
+      <div class="cc-d">Parse output tự động:<br><code style="font-size:11px;">import cclib<br>data = cclib.io.ccread("job.out")<br>print(data.scfenergies)</code></div>
+    </div>
+    <div class="cc">
+      <div class="cc-ico">🔬</div>
+      <div class="cc-t">Multiwfn</div>
+      <div class="cc-d">Phân tích hàm sóng: NBO, NCI, AIM, phân tích điện tích, phổ IR/Raman, ELF, LOL, vẽ mật độ 3D.</div>
+    </div>
+  </div>
+
+  <h3>10. Template Input Chuẩn (Copy &amp; Paste)</h3>
+
+  <h4>Template 1: Opt + Freq cơ bản (Hóa hữu cơ)</h4>
+  <pre style="font-size:12px; line-height:1.7;">! B3LYP D3BJ def2-TZVP RIJCOSX def2/JK TightSCF TightOpt Grid5 Opt Freq
+
+%maxcore 4000
+%pal nprocs 4 end
+%freq Temp 298.15 end
+%cpcm smd true SMDSolvent "water" end
+
+* xyz <span style="color:var(--gold-light);">CHARGE MULT</span>
+<span style="color:var(--text-dim);"># Dán tọa độ XYZ vào đây</span>
+*</pre>
+
+  <h4>Template 2: TD-DFT phổ UV-Vis</h4>
+  <pre style="font-size:12px; line-height:1.7;">! CAM-B3LYP D3BJ def2-TZVP RIJCOSX def2/JK TightSCF Grid5
+
+%maxcore 4000
+%pal nprocs 4 end
+%tddft NRoots 15 TDA false DoNTO true end
+%cpcm smd true SMDSolvent "<span style="color:var(--gold-light);">acetonitrile</span>" end
+
+* xyzfile <span style="color:var(--gold-light);">CHARGE MULT</span> optimized_structure.xyz</pre>
+
+  <h4>Template 3: NMR (¹H và ¹³C)</h4>
+  <pre style="font-size:12px; line-height:1.7;">! PBE0 D3BJ pcSseg-2 RIJCOSX def2/JK TightSCF NMR
+
+%maxcore 4000
+%pal nprocs 4 end
+%eprnmr
+  Nuclei = all H {shift}
+  Nuclei = all C {shift}
+end
+%cpcm smd true SMDSolvent "<span style="color:var(--gold-light);">chloroform</span>" end
+
+* xyzfile <span style="color:var(--gold-light);">CHARGE MULT</span> optimized_structure.xyz</pre>
+
+  <h4>Template 4: Phức kim loại chuyển tiếp</h4>
+  <pre style="font-size:12px; line-height:1.7;">! TPSSh D3BJ def2-TZVP RIJCOSX def2/JK TightSCF TightOpt Grid5 Opt Freq
+
+%maxcore 6000
+%pal nprocs 8 end
+%scf HFTyp UHF MaxIter 500 end  <span style="color:var(--text-dim);"># UHF nếu có electron lẻ</span>
+
+* xyz <span style="color:var(--gold-light);">CHARGE MULT</span>
+<span style="color:var(--text-dim);"># Dán tọa độ vào đây</span>
+*</pre>
+
+  <div class="box box-success">
+    <div class="box-title">✅ Tóm tắt quy trình ORCA chuẩn</div>
+    <p>
+    <strong>1.</strong> Vẽ cấu trúc (Avogadro) → xuất <code>.xyz</code><br>
+    <strong>2.</strong> Pre-opt bằng <code>xtb</code> (vài giây) → cấu trúc hợp lý hơn<br>
+    <strong>3.</strong> ORCA Opt/def2-SVP (nhanh) → kiểm tra không có freq ảo<br>
+    <strong>4.</strong> ORCA Opt+Freq/def2-TZVP → lấy G, H, ZPE<br>
+    <strong>5.</strong> ORCA SP/def2-QZVPP → năng lượng cuối cùng<br>
+    <strong>6.</strong> Phân tích: cclib, Multiwfn, orca_mapspc<br>
+    <strong>7.</strong> Visualize: Avogadro, UCSF Chimera, VMD
+    </p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(10)">← Trước</button>
+    <button class="btn primary" onclick="goTo('quiz')">Làm bài kiểm tra →</button>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="module" id="mod-quiz">
+  <span class="mtag tag-quiz">Kiểm tra tổng hợp</span>
+  <h2>Bài Kiểm Tra Tổng Hợp</h2>
+  <p class="subtitle">12 câu hỏi — kiểm tra toàn bộ kiến thức DFT</p>
+  <div id="quiz-container"></div>
+  <div style="text-align:center; margin-top:24px;">
+    <button class="btn primary" id="submit-quiz" onclick="submitQuiz()" style="padding: 12px 36px;">Nộp bài &amp; xem kết quả</button>
+  </div>
+  <div id="quiz-score">
+    <h3>Kết quả kiểm tra</h3>
+    <div class="snum" id="score-display">0/12</div>
+    <p id="score-msg"></p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn" onclick="goTo(11)">← Quay lại</button>
+    <button class="btn" onclick="resetQuiz()">🔄 Làm lại</button>
+  </div>
+</section>
+
+</main>
+
+<button id="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<script>
+const MODULES = ['0','1','2','3','4','5','6','7','8','9','10','11','quiz'];
+let completed = new Set(JSON.parse(localStorage.getItem('dft-completed') || '[]'));
+
+function goTo(id) {
+  const sid = String(id);
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const mod = document.getElementById('mod-' + sid);
+  if (mod) mod.classList.add('active');
+  const navItem = document.querySelector(`[data-mod="${sid}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  // Mark previous as completed
+  const curIdx = MODULES.indexOf(sid);
+  if (curIdx > 0) {
+    const prev = MODULES[curIdx - 1];
+    completed.add(prev);
+    localStorage.setItem('dft-completed', JSON.stringify([...completed]));
+  }
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (id === 'quiz' && !quizBuilt) buildQuiz();
+  // Trigger MathJax re-render
+  if (window.MathJax) MathJax.typesetPromise && MathJax.typesetPromise();
+}
+
+function updateProgress() {
+  const total = MODULES.length - 1; // exclude quiz (now 11 modules)
+  const done = [...completed].filter(m => m !== 'quiz').length;
+  const pct = Math.round(done / total * 100);
+  document.getElementById('progress-bar-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${done} / ${total} module hoàn thành`;
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const m = n.dataset.mod;
+    n.classList.remove('completed');
+    if (completed.has(m)) n.classList.add('completed');
+  });
+}
+
+// Nav items
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => goTo(item.dataset.mod));
+});
+
+updateProgress();
+
+// === Electron Density Visualization ===
+function drawDensity() {
+  const canvas = document.getElementById('densityCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0,0,W,H);
+
+  // H2O: O at center, 2 H at 104.5° angle
+  const cx = W/2, cy = H/2;
+  const atoms = [
+    {x: cx, y: cy, Z: 8, r: 1.0},
+    {x: cx - 90, y: cy - 60, Z: 1, r: 0.5},
+    {x: cx + 90, y: cy - 60, Z: 1, r: 0.5}
+  ];
+
+  const imgData = ctx.createImageData(W, H);
+  for (let px = 0; px < W; px++) {
+    for (let py = 0; py < H; py++) {
+      let rho = 0;
+      for (const atom of atoms) {
+        const dx = (px - atom.x) / 60, dy = (py - atom.y) / 60;
+        const r2 = dx*dx + dy*dy;
+        rho += atom.Z * atom.r * Math.exp(-2.5 * r2);
+      }
+      // Add some cross-terms for bonding
+      for (let a = 0; a < atoms.length; a++) {
+        for (let b = a+1; b < atoms.length; b++) {
+          const mx = (atoms[a].x + atoms[b].x)/2, my = (atoms[a].y + atoms[b].y)/2;
+          const dx = (px - mx)/60, dy = (py - my)/60;
+          const r2 = dx*dx + dy*dy;
+          rho += 0.3 * Math.exp(-4.0 * r2);
+        }
+      }
+      const t = Math.min(rho / 1.8, 1.0);
+      // Color: dark → blue → cyan → white
+      let r, g, b;
+      if (t < 0.33) { const s = t/0.33; r=0; g=Math.round(s*120); b=Math.round(s*255+50); }
+      else if (t < 0.66) { const s=(t-0.33)/0.33; r=Math.round(s*80); g=Math.round(120+s*120); b=255; }
+      else { const s=(t-0.66)/0.34; r=Math.round(80+s*175); g=Math.round(240+s*15); b=255; }
+      const idx = (py*W + px)*4;
+      imgData.data[idx]=r; imgData.data[idx+1]=g; imgData.data[idx+2]=b; imgData.data[idx+3]=255;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  // Draw atom labels
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = 'bold 14px IBM Plex Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('O', atoms[0].x, atoms[0].y+5);
+  ctx.fillText('H', atoms[1].x, atoms[1].y+5);
+  ctx.fillText('H', atoms[2].x, atoms[2].y+5);
+
+  // Draw bond lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  atoms.slice(1).forEach(h => {
+    ctx.beginPath(); ctx.moveTo(atoms[0].x, atoms[0].y); ctx.lineTo(h.x, h.y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Color scale legend
+  const grd = ctx.createLinearGradient(20,195,200,195);
+  grd.addColorStop(0,'#0d1117'); grd.addColorStop(0.33,'#0078ff'); grd.addColorStop(0.66,'#50f0ff'); grd.addColorStop(1,'#ffffff');
+  ctx.fillStyle = grd;
+  ctx.fillRect(20, 192, 180, 12);
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(20,192,180,12);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '10px IBM Plex Sans, sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('ρ thấp', 22, 218);
+  ctx.textAlign = 'right'; ctx.fillText('ρ cao', 200, 218);
+}
+setTimeout(drawDensity, 500);
+
+// === QUIZ ===
+const QUESTIONS = [
+  {
+    q: "Theo định lý Hohenberg-Kohn thứ nhất, thế năng bên ngoài $v_{ext}(\\mathbf{r})$ được xác định duy nhất bởi:",
+    opts: ["Hàm sóng trạng thái cơ bản $\\Psi_0$", "Mật độ electron $\\rho_0(\\mathbf{r})$ của trạng thái cơ bản", "Toán tử Hamiltonian $\\hat{H}$", "Năng lượng tổng $E_0$"],
+    ans: 1,
+    exp: "HK-1 chứng minh: $\\rho_0 \\to v_{ext}$ (ánh xạ một-một, trừ hằng số). Từ đó $v_{ext} \\to \\hat{H} \\to \\Psi_0 \\to$ mọi tính chất."
+  },
+  {
+    q: "Phương trình Kohn-Sham mô tả hệ electron nào?",
+    opts: ["Hệ electron thực với tương tác đầy đủ", "Hệ electron không tương tác trong thế năng hiệu dụng $v_s(\\mathbf{r})$", "Hệ Hartree-Fock với exchange chính xác", "Hệ perturbation Møller-Plesset bậc 2"],
+    ans: 1,
+    exp: "Kohn-Sham đề xuất hệ giả định gồm electron không tương tác, chuyển động trong $v_s = v_{ext} + v_H + v_{xc}$, cho ra cùng $\\rho(\\mathbf{r})$ như hệ thực."
+  },
+  {
+    q: "Thế năng hiệu dụng Kohn-Sham $v_s(\\mathbf{r})$ gồm những thành phần nào?",
+    opts: ["$v_{ext} + v_H$", "$v_{ext} + v_{xc}$", "$v_{ext} + v_H + v_{xc}$", "$v_H + v_{xc} + v_{kin}$"],
+    ans: 2,
+    exp: "$v_s = v_{ext}$ (hút hạt nhân) $+ v_H$ (Hartree/Coulomb) $+ v_{xc}$ (trao đổi-tương quan). $v_{xc} = \\delta E_{xc}/\\delta\\rho$."
+  },
+  {
+    q: "Trong xấp xỉ LDA, $E_{xc}$ được tính như thế nào?",
+    opts: ["Dựa trên mật độ và gradient của nó $\\nabla\\rho$", "Dựa trên mật độ tại mỗi điểm, giả định electron gas đồng nhất cục bộ", "Trộn trao đổi HF chính xác với GGA", "Dựa trên kinetic energy density $\\tau$"],
+    ans: 1,
+    exp: "LDA: $E_{xc}^{LDA} = \\int \\rho(\\mathbf{r})\\varepsilon_{xc}[\\rho(\\mathbf{r})]d\\mathbf{r}$. Mỗi điểm được coi như trong electron gas đồng nhất với mật độ cục bộ $\\rho(\\mathbf{r})$."
+  },
+  {
+    q: "Functional B3LYP thuộc loại nào trong thang Jacob's Ladder?",
+    opts: ["LDA (bậc 1)", "GGA (bậc 2)", "meta-GGA (bậc 3)", "Hybrid (bậc 4)"],
+    ans: 3,
+    exp: "B3LYP là global hybrid: $E_{xc} = 0.20 E_x^{HF} + 0.80 E_x^{LSDA} + 0.72\\Delta E_x^{B88} + 0.19 E_c^{VWN} + 0.81 E_c^{LYP}$. Trộn 20% trao đổi HF chính xác."
+  },
+  {
+    q: "Trong ký hiệu basis set '6-31G*', dấu * có nghĩa là gì?",
+    opts: ["Thêm hàm diffuse trên nguyên tử hạng nặng", "Thêm hàm polarization d trên nguyên tử hạng nặng (C, N, O...)", "Thêm hàm p trên Hydrogen", "Dùng 6 Gaussian cho orbital valence"],
+    ans: 1,
+    exp: "* (hoặc (d)) = thêm hàm polarization d trên C, N, O, F... Giúp mô tả sự biến dạng orbital khi tạo liên kết. ** = thêm cả hàm p trên H."
+  },
+  {
+    q: "Tại sao GTO (Gaussian Type Orbitals) phổ biến hơn STO?",
+    opts: ["GTO chính xác hơn gần hạt nhân", "Tích phân 4-tâm với GTO có công thức giải tích, còn STO không có", "GTO cần ít hàm cơ sở hơn STO", "GTO thỏa mãn điều kiện cusp của Kato"],
+    ans: 1,
+    exp: "Tích của 2 GTO tại 2 tâm khác nhau là một GTO tại tâm thứ 3 — cho phép tính tích phân 4-tâm $(ij|kl)$ nhanh. STO không có tính chất này → tích phân phải dùng số (chậm)."
+  },
+  {
+    q: "Dispersion correction DFT-D3 được thêm vào để xử lý vấn đề gì?",
+    opts: ["Sai số self-interaction error trong HF exchange", "Tương tác van der Waals / London dispersion mà LDA/GGA bỏ sót", "Tương quan tầm gần giữa các electron", "Band gap underestimation của DFT"],
+    ans: 1,
+    exp: "LDA/GGA không mô tả được London dispersion ($E \\sim -C_6/R^6$) do đây là hiệu ứng tương quan tầm xa. D3 bổ sung số hạng $-s_6 \\sum C_6^{AB}/R_{AB}^6$ với damping function."
+  },
+  {
+    q: "Chu trình SCF (Self-Consistent Field) trong DFT kết thúc khi nào?",
+    opts: ["Sau một số lần lặp cố định", "Khi mật độ electron hội tụ: $|\\rho^{new} - \\rho^{old}| < \\delta$", "Khi năng lượng quỹ đạo $\\varepsilon_i$ không đổi", "Khi toán tử Fock không thay đổi theo từng bước"],
+    ans: 1,
+    exp: "SCF hội tụ khi mật độ mới và cũ gần như nhau (tiêu chuẩn điển hình: $\\delta \\sim 10^{-6}$ a.u.) hoặc năng lượng thay đổi dưới ngưỡng nhất định ($\\sim 10^{-8}$ Ha)."
+  },
+  {
+    q: "TD-DFT (Time-Dependent DFT) được dùng chủ yếu để tính gì?",
+    opts: ["Cấu trúc hình học tối ưu", "Trạng thái kích thích và phổ UV-Vis", "Hằng số lực và tần số dao động", "Năng lượng liên kết"],
+    ans: 1,
+    exp: "TD-DFT giải phương trình Casida để tính năng lượng kích thích ($\\omega_I$) và oscillator strength, từ đó xây dựng phổ UV-Vis. Sai số điển hình ±0.2–0.5 eV."
+  },
+  {
+    q: "Xấp xỉ Born-Oppenheimer trong hóa học lượng tử giả định điều gì?",
+    opts: ["Hạt nhân và electron chuyển động cùng tốc độ", "Hạt nhân chuyển động chậm hơn electron rất nhiều, nên có thể xem hạt nhân đứng yên khi giải bài toán electron", "Không có tương tác giữa hạt nhân và electron", "Spin không đóng góp vào năng lượng tổng"],
+    ans: 1,
+    exp: "Khối lượng hạt nhân ≥ 1836 lần electron → hạt nhân chuyển động chậm hơn nhiều. Từ quan điểm electron, hạt nhân gần như đứng yên → tách Hamiltonian thành phần điện tử và hạt nhân."
+  },
+  {
+    q: "Trong phân tích năng lượng Kohn-Sham, $E_{xc}[\\rho]$ chứa những đóng góp nào?",
+    opts: ["Chỉ năng lượng trao đổi (exchange)", "Chỉ năng lượng tương quan (correlation)", "Trao đổi + tương quan + phần bù sai số động năng $(T - T_s)$", "Trao đổi + tương quan + Hartree energy"],
+    ans: 2,
+    exp: "$E_{xc} = (T - T_s) + (V_{ee} - J)$. Gồm: (1) sai lệch động năng giữa hệ thực và KS, (2) năng lượng trao đổi từ phản đối xứng, (3) tương quan electron. Đây là số hạng duy nhất cần xấp xỉ."
+  }
+];
+
+let quizBuilt = false;
+let userAnswers = new Array(QUESTIONS.length).fill(null);
+
+function buildQuiz() {
+  quizBuilt = true;
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  QUESTIONS.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-q';
+    div.innerHTML = `
+      <div class="quiz-q-num">Câu ${qi+1} / ${QUESTIONS.length}</div>
+      <div class="quiz-q-text">${q.q}</div>
+      <div class="quiz-opts" id="opts-${qi}">
+        ${q.opts.map((o, oi) => `
+          <button class="quiz-opt" onclick="selectOpt(${qi},${oi})" id="opt-${qi}-${oi}">
+            <span class="opt-lbl">${['A','B','C','D'][oi]}</span>
+            <span>${o}</span>
+          </button>`).join('')}
+      </div>
+      <div class="quiz-exp" id="exp-${qi}">${q.exp}</div>
+    `;
+    container.appendChild(div);
+  });
+  if (window.MathJax) MathJax.typesetPromise && MathJax.typesetPromise([container]);
+}
+
+function selectOpt(qi, oi) {
+  if (userAnswers[qi] !== null) return;
+  userAnswers[qi] = oi;
+  const q = QUESTIONS[qi];
+  const opts = document.querySelectorAll(`#opts-${qi} .quiz-opt`);
+  opts.forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === oi && oi !== q.ans) btn.classList.add('wrong');
+  });
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  if (window.MathJax) MathJax.typesetPromise && MathJax.typesetPromise([document.getElementById(`exp-${qi}`)]);
+}
+
+function submitQuiz() {
+  const unanswered = userAnswers.filter(a => a === null).length;
+  if (unanswered > 0 && !confirm(`Còn ${unanswered} câu chưa trả lời. Vẫn nộp bài?`)) return;
+  let correct = 0;
+  userAnswers.forEach((a, i) => { if (a === QUESTIONS[i].ans) correct++; });
+  const score = document.getElementById('quiz-score');
+  score.style.display = 'block';
+  document.getElementById('score-display').textContent = `${correct}/${QUESTIONS.length}`;
+  const pct = correct/QUESTIONS.length;
+  let msg, color;
+  if (pct >= 0.9) { msg='🏆 Xuất sắc! Bạn đã nắm vững DFT.'; color='var(--green)'; }
+  else if (pct >= 0.7) { msg='👍 Tốt lắm! Ôn thêm các phần điểm yếu.'; color='var(--gold-light)'; }
+  else if (pct >= 0.5) { msg='📖 Cần ôn luyện thêm — đọc lại các module.'; color='var(--blue)'; }
+  else { msg='💪 Cần học lại từ đầu — đừng nản!'; color='var(--red)'; }
+  document.getElementById('score-display').style.color = color;
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('submit-quiz').disabled = true;
+  score.scrollIntoView({behavior:'smooth'});
+  completed.add('quiz');
+  localStorage.setItem('dft-completed', JSON.stringify([...completed]));
+  updateProgress();
+}
+
+function resetQuiz() {
+  quizBuilt = false;
+  userAnswers = new Array(QUESTIONS.length).fill(null);
+  document.getElementById('quiz-score').style.display = 'none';
+  document.getElementById('submit-quiz').disabled = false;
+  buildQuiz();
+}
+</script>
+</body>
+</html>
